@@ -128,6 +128,74 @@ def format_xlam_input(example: Any, tokenizer: Any) -> str:
         )
 
 
+def tokenize_xlam_sft_example(
+    example: Any,
+    tokenizer: Any,
+    max_seq_len: int = 512,
+) -> dict[str, torch.Tensor]:
+    """Tokenize an xLAM example for SFT with prompt label masking (-100).
+
+    Masks all prompt/instruction tokens and padding tokens with -100 so that
+    loss is computed strictly over assistant tool call responses.
+    """
+    tools_str = json.dumps(example.tools, indent=2)
+    system_msg = (
+        "You are an agent with access to the following tools:\n"
+        f"{tools_str}\n\n"
+        "If you need to call a tool, output valid JSON in the format:\n"
+        '{"name": "tool_name", "arguments": {"arg1": "value"}}\n'
+        "If no tool is required, respond with plain text."
+    )
+    user_content = f"{system_msg}\n\nUser request: {example.query}"
+    assistant_msg = json.dumps(example.answers)
+
+    # 1. Prompt-only text to determine prompt token length
+    try:
+        prompt_text = tokenizer.apply_chat_template(
+            [{"role": "user", "content": user_content}],
+            tokenize=False,
+            add_generation_prompt=True,
+        )
+    except Exception:
+        prompt_text = f"User: {user_content}\nAssistant: "
+
+    prompt_ids = tokenizer.encode(prompt_text, add_special_tokens=False)
+    prompt_len = len(prompt_ids)
+
+    # 2. Full dialogue text
+    messages = [
+        {"role": "user", "content": user_content},
+        {"role": "assistant", "content": assistant_msg},
+    ]
+    try:
+        full_text = tokenizer.apply_chat_template(messages, tokenize=False)
+    except Exception:
+        full_text = f"User: {user_content}\nAssistant: {assistant_msg}"
+
+    tokens = tokenizer(
+        full_text,
+        max_length=max_seq_len,
+        padding="max_length",
+        truncation=True,
+        return_tensors="pt",
+    )
+    input_ids = tokens["input_ids"].squeeze(0)
+    attention_mask = tokens["attention_mask"].squeeze(0)
+
+    # 3. Label masking: mask prompt prefix and padding tokens with -100
+    labels = input_ids.clone()
+    mask_len = min(prompt_len, max_seq_len)
+    labels[:mask_len] = -100
+    if tokenizer.pad_token_id is not None:
+        labels[input_ids == tokenizer.pad_token_id] = -100
+
+    return {
+        "input_ids": input_ids,
+        "attention_mask": attention_mask,
+        "labels": labels,
+    }
+
+
 class PeftMPSBackend:
     """Execution backend using Hugging Face PEFT on Apple Silicon (MPS)."""
 
@@ -453,20 +521,15 @@ class PeftMPSBackend:
         raw_examples = load_xlam_file(raw_dataset_path)
         train_examples = [ex for ex in raw_examples if str(ex.id) in train_ids]
 
-        # Prepare tokenized training items
+        # Prepare tokenized training items with SFT prompt label masking (-100)
         max_steps = config.training.max_steps
         train_batch = []
         for i in range(max_steps):
             ex = train_examples[i % len(train_examples)]
-            formatted_text = format_xlam_input(ex, tokenizer)
-            tokens = tokenizer(
-                formatted_text,
-                max_length=config.training.max_seq_len,
-                padding="max_length",
-                truncation=True,
-                return_tensors="pt",
+            batch_item = tokenize_xlam_sft_example(
+                ex, tokenizer, max_seq_len=config.training.max_seq_len
             )
-            train_batch.append(tokens["input_ids"].squeeze(0))
+            train_batch.append(batch_item)
 
         # 7. Start Resource Profiler (Prompt 9 Step 3)
         profiler = ResourceProfiler(sample_interval_ms=100)
@@ -486,10 +549,16 @@ class PeftMPSBackend:
         for step in range(max_steps):
             step_t0 = time.time()
             optimizer.zero_grad()
-            input_ids = train_batch[step].unsqueeze(0).to(device)
-            labels = input_ids.clone()
+            batch_item = train_batch[step]
+            input_ids = batch_item["input_ids"].unsqueeze(0).to(device)
+            attention_mask = batch_item["attention_mask"].unsqueeze(0).to(device)
+            labels = batch_item["labels"].unsqueeze(0).to(device)
 
-            outputs = peft_model(input_ids=input_ids, labels=labels)
+            outputs = peft_model(
+                input_ids=input_ids,
+                attention_mask=attention_mask,
+                labels=labels,
+            )
             loss = outputs.loss
             loss.backward()
             optimizer.step()
