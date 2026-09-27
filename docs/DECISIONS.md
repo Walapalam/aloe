@@ -175,7 +175,7 @@ On Apple Silicon, `peak_memory_gb` is formally defined as **peak process residen
 
 ## ADR-013 · Multi-Objective Bayesian Optimization with SAAS-GP and qLogNEHVI
 
-**Date:** 2026-09-18 · **Status:** Accepted · **Governs October Gate D**
+**Date:** 2026-09-18 · **Status:** Superseded by ADR-016 · **Governs October Gate D**
 
 **Context.** ALOE's architecture-typed search space parameterizes $D=6$ discrete dimensions across 3 typed component groups per model (`local_attn`, `global_attn`, `ffn` in Gemma 4; `global_attn`, `ssm`, `ffn` in Falcon-H1), scaling to $D \approx 30\text{--}60$ dimensions when evaluating finer-grained layer-selective or sub-module typing. While low-dimensional relative to module-level search ($D > 200$), a multi-objective search over combinatorial discrete configurations requires surrogate-assisted sample efficiency. AutoPEFT demonstrated that a sparse-axis-aligned subspace Gaussian process (SAAS-GP) surrogate fits high-dimensional PEFT search spaces with a modest number of evaluations. The project therefore needs a multi-objective optimizer that can simultaneously minimise competing objectives (e.g., task error rate, peak memory, trial latency) and return a Pareto frontier, not a single best point.
 
