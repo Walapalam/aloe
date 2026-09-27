@@ -19,8 +19,8 @@ class RandomSearchSampler:
         self,
         grammar: SearchGrammar,
         seed: int = 42,
-        dataset_manifest_path: str = "configs/manifests/xlam_pilot_v1.json",
-        dataset_raw_path: str = "data/xlam_sample_500.jsonl",
+        dataset_manifest_path: str = "data/manifests/xlam_pilot_v1.json",
+        dataset_raw_path: str = "data/raw/xlam/xlam_function_calling_60k.json",
     ) -> None:
         self.grammar = grammar
         self.rng = random.Random(seed)

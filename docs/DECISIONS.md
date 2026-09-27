@@ -258,5 +258,33 @@ On Apple Silicon, `peak_memory_gb` is formally defined as **peak process residen
 - *Alternative C: NVIDIA T4 (16GB, Turing).* Rejected because T4 lacks native BF16 Tensor Cores (forcing fp16 down-casting or slow fp32 simulation) and has insufficient memory bandwidth for Mamba-2 recurrent expansion.
 - *Alternative D: NVIDIA L4 (24GB, Ada Lovelace).* Selected as the Pareto-optimal cloud tier: optimal price-performance ($0.28/hr Spot), 24GB GDDR6 VRAM, native BF16/FP8 Tensor Cores, and full compiled Mamba-2 chunk scan support.
 
+---
+
+## ADR-016 · 3-Objective Formulation (Tool Accuracy, Trainable Parameters, Peak Process RSS) & Random Search Baseline
+**Date:** 2026-09-28 · **Status:** Accepted · **Supersedes ADR-013**
+
+**Context.**
+1. ADR-013 specified multi-objective optimization using SAAS-GP and qLogNEHVI over objectives loosely defined as "task error rate, peak memory, trial latency". It contained a conceptual tension: describing the search space as $D=6$ (low-dimensional for Gemma 4's three component groups) while simultaneously invoking SAAS-GP, which is specifically designed for high-dimensional regimes ($D \ge 50$).
+2. During empirical implementation of the proposal Proof of Concept, two critical realities were established:
+   - *Flat Memory Risk:* On Apple Silicon Unified Memory with fixed batch size ($b=2$) and sequence length ($L=256$), peak process RSS can exhibit low variance across small rank deltas (e.g. $r=4$ vs $r=8$) because PyTorch allocator blocks dominate memory. In a 2-objective setup (Accuracy vs Memory), a flat memory metric collapses search into a 1-dimensional accuracy optimization.
+   - *Baseline Necessity:* Before deploying computationally heavy Gaussian Process surrogates in Gate D, Design Science Research methodology requires an unbiased, empirical **Random Search Baseline** with parameter-budget matching to establish the ground-truth Pareto frontier.
+
+**Decision.**
+1. **Three-Objective Formulation:** The ALOE objective vector $\vec{f}(\vec{x})$ is formally frozen to three distinct criteria:
+   - $f_1(\vec{x}) = Acc_{\text{arg}}$: Argument-level exact match AST tool-calling accuracy (**Maximize**, range $[0.0, 1.0]$).
+   - $f_2(\vec{x}) = N_{\text{params}}$: Total active trainable adapter parameters (**Minimize**, discrete integer count).
+   - $f_3(\vec{x}) = M_{\text{RSS}}$: Peak process resident set size memory sampled at 100ms intervals (**Minimize**, MB).
+2. **Budget-Parity Sampling Invariant:** Any candidate configuration generated during search must satisfy:
+   $$\left| \frac{N_{\text{params}}^{(\text{typed})} - N_{\text{params}}^{(\text{base})}}{N_{\text{params}}^{(\text{base})}} \right| \le 0.05$$
+   Candidates violating this constraint are rejected pre-flight by `RandomSearchSampler`, eliminating parameter count as an experimental confounder.
+3. **Staged Optimizer Deployment:**
+   - *Proposal PoC (September–October):* `RandomSearchSampler` + `extract_pareto_frontier` + 2-D/3-D hypervolume calculation (`calculate_hypervolume_2d`).
+   - *Final Project (October Gate D):* Standard Matérn-5/2 Gaussian Process surrogate with qLogNEHVI acquisition function in BoTorch, evaluated against the random search baseline.
+
+**Consequences.**
+- Solves the $D=6$ vs high-dimensional contradiction by deploying standard GP surrogates appropriate for $D \in [6, 30]$ rather than SAAS-GP.
+- Adding $N_{\text{params}}$ hedges against flat memory plateaus, guaranteeing a live, highly sensitive optimization dimension.
+- Provides a clean, mathematically sound Pareto front for examiner viva defense.
+
 
 
