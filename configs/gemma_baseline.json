@@ -1,0 +1,18 @@
+{
+  "model_id": "google/gemma-4-E2B-it",
+  "architecture_type": "transformer",
+  "target_modules": [
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "o_proj",
+    "gate_proj",
+    "up_proj",
+    "down_proj"
+  ],
+  "lora_r": 8,
+  "lora_alpha": 16,
+  "batch_size": 1,
+  "learning_rate": 0.0002,
+  "device": "mps"
+}

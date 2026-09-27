@@ -1,0 +1,17 @@
+{
+  "model_id": "tiiuae/Falcon-H1-1.5B-Instruct",
+  "architecture_type": "hybrid_ssm",
+  "target_modules": [
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "o_proj",
+    "in_proj",
+    "out_proj"
+  ],
+  "lora_r": 8,
+  "lora_alpha": 16,
+  "batch_size": 1,
+  "learning_rate": 0.0002,
+  "device": "mps"
+}
