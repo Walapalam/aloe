@@ -1,7 +1,7 @@
 """ADR-002: the core must not depend on any training framework."""
 import ast, pathlib
 
-FORBIDDEN = {"peft", "bitsandbytes", "mlx", "mlx_lm", "unsloth", "transformers"}
+FORBIDDEN = {"peft", "bitsandbytes", "mlx", "mlx_lm", "unsloth", "transformers", "botorch", "gpytorch", "pyro"}
 CORE = ["aloe/architecture", "aloe/search_space"]
 
 
