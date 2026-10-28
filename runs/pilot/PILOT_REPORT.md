@@ -1,7 +1,7 @@
 # September/October Pilot Report: Multi-Objective LoRA & Parameter-Budget Parity (±5%) Evaluation
 
 - **Generated At**: `2026-10-28 09:12:10Z`
-- **Git Commit SHA**: `8ebdba874dec8e0133114b486b0aac1a376d45f2` (Identical across all 8 pilot runs)
+- **Git Commit SHA**: `e45809d5403f077f9851dcca3ae84dc70ef22dde` (Identical across all 8 pilot runs)
 - **Status**: **PASS (Milestone Gate C + Budget-Parity ±5%, Left-Truncated `-100` Prompt Masking & Full AST Evaluation)**
 - **Dataset Split**: `data/manifests/xlam_pilot_v1.json` (Strictly Tool-Disjoint: $\mathcal{T}_{\text{train}} \cap \mathcal{T}_{\text{val}} = \emptyset$)
 - **SFT Prompt Masking (`FR06`)**: Left-truncated schema prefixes (`full_ids[-max_seq_len:]`) with `-100` loss masking on 100% of prompt/schema tokens (`25/25` training examples preserve assistant JSON tool-call tokens)
@@ -12,7 +12,7 @@
 > [!IMPORTANT]
 > **STATISTICAL VALIDITY & PARAMETER-BUDGET PARITY NOTICE**:
 > 1. **Parameter-Budget Parity ($\pm 5\%$, FR04)**: To prevent parameter-count confounding (Schneider et al., 2025), this report explicitly separates **Strictly Parameter-Budget-Matched ($\pm 5\%$) Comparisons** (`P4_Matched` vs. `P1` on Gemma 4 E2B at `-4.66%`; `P2` vs. `P1` at `+1.95%` and `P4_SSM_Matched` vs. `P1` at `-3.12%` on Falcon-H1 1.5B) from **Unmatched Capacity Ablations** (`P2`/`P3` on Gemma at `-16.73%`/`+66.73%`, `P3` on Falcon at `+36.97%`, and the 2-step FFN-pruned smoke ablation at `-67.79%`).
-> 2. **Identical-Commit Single-Seed Pilot Scope ($N=1$ on 25/12-step pilot; $N=2$ on 2-step smoke ablation)**: All 8 primary pilot trials were executed at the exact same commit (`8ebdba874dec8e0133114b486b0aac1a376d45f2`) with identical initial training losses (`2.8117` on Gemma 4 E2B; `1.5534` on Falcon-H1 1.5B). They verify pipeline execution, pre-training parameter parity enforcement, latency asymmetry, and hierarchical AST tool-calling telemetry prior to full 30–50 trial `qLogNEHVI` campaigns with $\ge 3$ random seeds and 10,000-iteration paired bootstrap significance testing.
+> 2. **Identical-Commit Single-Seed Pilot Scope ($N=1$ on 25/12-step pilot; $N=2$ on 2-step smoke ablation)**: All 8 primary pilot trials were executed at the exact same commit (`e45809d5403f077f9851dcca3ae84dc70ef22dde`) with identical initial training losses (`2.8117` on Gemma 4 E2B; `1.5534` on Falcon-H1 1.5B). They verify pipeline execution, pre-training parameter parity enforcement, latency asymmetry, and hierarchical AST tool-calling telemetry prior to full 30–50 trial `qLogNEHVI` campaigns with $\ge 3$ random seeds and 10,000-iteration paired bootstrap significance testing.
 
 ---
 
@@ -85,4 +85,4 @@ Recorded in `runs/pilot_cuda/SMOKE_20261012T095504Z/` across two random seeds (`
 
 - **Pre-Training Budget Parity Validator (`TrialConfig.validate_parameter_budget_parity`)**: Analytically verifies exact parameter counts across all 205 (`Gemma 4 E2B`) and 192 (`Falcon-H1 1.5B`) linear targets prior to model instantiation (`tests/test_budget_matching.py`).
 - **Negative Control (`Falcon-H1 conv1d`)**: An intentional trial targeting `model.layers.0.mamba.conv1d` was rejected **before** allocation by `to_peft_lora_config()`, and dynamically trapped with `GRADIENT_MISSING` in `verify_gradients()`. Zero training steps or compute were wasted.
-- **Active Trials**: All 8 primary MPS pilot runs (`P1, P4_Matched, P2, P3` on Gemma 4 E2B; `P1, P2, P4_SSM_Matched, P3` on Falcon-H1 1.5B) completed at the identical commit (`8ebdba874dec8e0133114b486b0aac1a376d45f2`), stored their weights, passed fresh subprocess reload verification, and recorded full AST tool-calling metrics.
+- **Active Trials**: All 8 primary MPS pilot runs (`P1, P4_Matched, P2, P3` on Gemma 4 E2B; `P1, P2, P4_SSM_Matched, P3` on Falcon-H1 1.5B) completed at the identical commit (`e45809d5403f077f9851dcca3ae84dc70ef22dde`), stored their weights, passed fresh subprocess reload verification, and recorded full AST tool-calling metrics.

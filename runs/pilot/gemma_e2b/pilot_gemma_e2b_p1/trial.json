@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "trial_id": "pilot_gemma_e2b_p1",
   "timestamp_utc": "2026-10-28T08:50:33.506294+00:00",
-  "git_commit": "8ebdba874dec8e0133114b486b0aac1a376d45f2",
+  "git_commit": "e45809d5403f077f9851dcca3ae84dc70ef22dde",
   "dataset_manifest_sha256": "cfe8c2016f5e1eafdad4f03bc3b3b6d4eb1b4b96f260d8d75a74e12b2f89c588",
   "hardware": "Apple M1 Max (64 GB unified memory), macOS, MPS",
   "library_versions": {
