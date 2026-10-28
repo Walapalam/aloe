@@ -58,6 +58,7 @@ class TrainingParameters(BaseModel):
     warmup_steps: int = 5
     weight_decay: float = 0.01
     precision: Literal["bf16", "fp32"] = "bf16"
+    adapter_dtype: Literal["fp32", "bf16"] = "fp32"
 
 
 class TrialConfig(BaseModel):
@@ -184,6 +185,7 @@ class TrialConfig(BaseModel):
             "lora_dropout": 0.0,
             "bias": "none",
             "task_type": TaskType.CAUSAL_LM,
+            "autocast_adapter_dtype": self.training.adapter_dtype == "fp32",
         }
 
         lora_config = LoraConfig(**peft_kwargs)

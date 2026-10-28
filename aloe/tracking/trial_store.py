@@ -20,17 +20,28 @@ from pydantic import BaseModel, ConfigDict, Field
 from aloe.execution.trial_config import TrialConfig
 
 
-def get_git_commit(repo_dir: Path | str = ".") -> str:
-    """Retrieve current git commit SHA."""
+def get_git_commit(repo_dir: Path | str | None = None) -> str:
+    """Retrieve current git commit SHA, appending '-dirty' if tracked files are modified."""
+    target_dir = Path(repo_dir) if repo_dir is not None else Path(__file__).resolve().parents[2]
     try:
         res = subprocess.run(
             ["git", "rev-parse", "HEAD"],
-            cwd=str(repo_dir),
+            cwd=str(target_dir),
             capture_output=True,
             text=True,
             check=True,
         )
-        return res.stdout.strip()
+        sha = res.stdout.strip()
+        dirty = subprocess.run(
+            ["git", "status", "--porcelain", "--untracked-files=no"],
+            cwd=str(target_dir),
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if dirty.returncode == 0 and dirty.stdout.strip():
+            return f"{sha}-dirty"
+        return sha
     except Exception:
         return "UNKNOWN"
 

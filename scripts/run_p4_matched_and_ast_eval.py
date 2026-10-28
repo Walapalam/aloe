@@ -310,6 +310,33 @@ def main() -> None:
 
     for model_id, slug, baseline_params, cfg_list in model_runs:
         snapshot_path = registry.get_snapshot_path(model_id)
+        base_summary = evaluate_model_or_adapter_ast(
+            snapshot_path=snapshot_path,
+            adapter_path=None,
+            val_examples=val_examples,
+            device=device,
+            max_eval=8,
+        )
+        base_eval_record = {
+            "model_id": model_id,
+            "slug": slug,
+            "regime": "zero_shot_base_model",
+            "trainable_params": 0,
+            "param_delta_vs_baseline_pct": -100.0,
+            "ast_parse_success_rate": base_summary.parse_success_rate,
+            "ast_tool_selection_accuracy": base_summary.tool_selection_accuracy,
+            "ast_argument_name_accuracy": base_summary.argument_name_accuracy,
+            "ast_argument_value_accuracy": base_summary.argument_value_accuracy,
+            "ast_exact_match_accuracy": base_summary.exact_match_accuracy,
+        }
+        base_dir = runs_dir / slug / "base_zero_shot"
+        base_dir.mkdir(parents=True, exist_ok=True)
+        (base_dir / "eval.json").write_text(json.dumps(base_eval_record, indent=2), encoding="utf-8")
+        if alt_dir.is_dir():
+            alt_base_dir = alt_dir / "runs" / "pilot" / slug / "base_zero_shot"
+            alt_base_dir.mkdir(parents=True, exist_ok=True)
+            (alt_base_dir / "eval.json").write_text(json.dumps(base_eval_record, indent=2), encoding="utf-8")
+
         for cfg_id, trial_folder in cfg_list:
             record_path = runs_dir / slug / cfg_id / "trial.json"
             adapter_path = runs_dir / slug / trial_folder / "adapter"
