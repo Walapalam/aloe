@@ -185,7 +185,6 @@ class TrialConfig(BaseModel):
             "lora_dropout": 0.0,
             "bias": "none",
             "task_type": TaskType.CAUSAL_LM,
-            "autocast_adapter_dtype": self.training.adapter_dtype == "fp32",
         }
 
         lora_config = LoraConfig(**peft_kwargs)
