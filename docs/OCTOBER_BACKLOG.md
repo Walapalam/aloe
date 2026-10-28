@@ -2,7 +2,7 @@
 
 **Document Version:** 1.0.0  
 **Target Milestone:** October 2026 Sprint (Gates D & E)  
-**Author:** Raqeeb Rameez (IIT ID: 20230943 / UoW ID: w2082238)  
+**Author:** Raqeeb Rameez (IIT ID: 20230934 / UoW ID: w2084794)  
 **Status:** **APPROVED FOR IMPLEMENTATION**  
 **Core Dependencies:** `aloe.search_space.schema.SearchGrammar`, `aloe.execution.trial_config.TrialConfig`, BoTorch $\ge 0.11$, Ax-Platform $\ge 0.4$, GPyTorch $\ge 1.13$.
 

@@ -1,6 +1,6 @@
 # ALOE — Core Engineering Specification & Implementation Protocol
 
-**Author:** Raqeeb Rameez (IIT ID: 20230943 / UoW ID: w2082238)  
+**Author:** Raqeeb Rameez (IIT ID: 20230934 / UoW ID: w2084794)  
 **Project:** Architecture-aware LoRA Optimization Engine (ALOE)  
 **Date:** September 2026  
 **Status:** Authoritative Core Engineering Specification  

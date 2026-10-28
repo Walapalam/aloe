@@ -50,6 +50,15 @@ GEMMA_CONFIGS = {
             "ffn": GroupTrialSetting(enabled=True, rank=8, alpha=16),
         },
     },
+    "P4_Matched": {
+        "name": "P4_Typed_Matched",
+        "description": "Typed Matched (±5% Parity) — Local Attn r=16 α=32, Global Attn r=32 α=64, FFN r=4 α=8 (11,515,904 params; -4.66% vs P1)",
+        "group_settings": {
+            "local_attention": GroupTrialSetting(enabled=True, rank=16, alpha=32),
+            "global_attention": GroupTrialSetting(enabled=True, rank=32, alpha=64),
+            "ffn": GroupTrialSetting(enabled=True, rank=4, alpha=8),
+        },
+    },
     "P2": {
         "name": "P2_Typed_A",
         "description": "Typed A — Attention groups rank 16 alpha 32, FFN rank 4 alpha 8",

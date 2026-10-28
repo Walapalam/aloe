@@ -1,5 +1,5 @@
 # ALOE — GCP NVIDIA L4 Cloud GPU Execution Guide
-**Version:** 1.0.0 · **Date:** 2026-09-18 · **Author:** Raqeeb Rameez (IIT ID: 20230943 / UoW ID: w2082238)  
+**Version:** 1.0.0 · **Date:** 2026-09-18 · **Author:** Raqeeb Rameez (IIT ID: 20230934 / UoW ID: w2084794)  
 **Status:** Active Execution Blueprint · **Scope:** Falcon-H1 1.5B Mamba-2 Offloading
 
 ---

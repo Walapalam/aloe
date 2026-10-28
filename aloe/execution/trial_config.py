@@ -13,6 +13,7 @@ import uuid
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from aloe.architecture.schema import ArchitectureDescription
 from aloe.search_space.schema import SearchGrammar
 
 
@@ -187,6 +188,73 @@ class TrialConfig(BaseModel):
 
         lora_config = LoraConfig(**peft_kwargs)
         return peft_kwargs, lora_config
+
+    def compute_trainable_params(
+        self,
+        arch: ArchitectureDescription,
+        grammar: SearchGrammar | None = None,
+    ) -> int:
+        """Compute exact trainable LoRA parameter count prior to model instantiation (FR04).
+
+        For each targeted linear module with shape (d_out, d_in) and assigned rank r,
+        LoRA injects matrices A (r x d_in) and B (d_out x r), contributing r * (d_in + d_out)
+        trainable parameters.
+        """
+        if grammar is not None:
+            self.validate_against_grammar(grammar)
+
+        shapes: dict[str, list[int]] = {
+            m.name: m.shape for m in arch.modules if m.shape and len(m.shape) == 2
+        }
+
+        total_params = 0
+        if self.explicit_target_modules:
+            for mod in self.explicit_target_modules:
+                if mod not in shapes:
+                    raise InvalidConfigError(f"Module '{mod}' has no 2D linear shape in architecture.")
+                d_out, d_in = shapes[mod]
+                total_params += 8 * (d_in + d_out)
+        elif grammar is not None:
+            grammar_group_types = {g.component_type.value: g for g in grammar.groups}
+            for g_name, g_dim in grammar_group_types.items():
+                setting = self.group_settings.get(g_name)
+                if setting is not None and setting.enabled:
+                    for target in g_dim.targets:
+                        if target not in shapes:
+                            raise InvalidConfigError(
+                                f"Target '{target}' in group '{g_name}' has no 2D linear shape."
+                            )
+                        d_out, d_in = shapes[target]
+                        total_params += setting.rank * (d_in + d_out)
+        return total_params
+
+    def validate_parameter_budget_parity(
+        self,
+        arch: ArchitectureDescription,
+        baseline_params: int,
+        tolerance: float = 0.05,
+        grammar: SearchGrammar | None = None,
+        enforce: bool = True,
+    ) -> dict[str, Any]:
+        """Verify trainable parameter count parity within +/- tolerance (default 5%, FR04)."""
+        if baseline_params <= 0:
+            raise ValueError(f"baseline_params must be positive, got {baseline_params}")
+        candidate_params = self.compute_trainable_params(arch=arch, grammar=grammar)
+        rel_delta = (candidate_params - baseline_params) / baseline_params
+        within_budget = abs(rel_delta) <= tolerance
+        if enforce and not within_budget:
+            raise InvalidConfigError(
+                f"Parameter budget parity violation: candidate={candidate_params:,} vs "
+                f"baseline={baseline_params:,} (delta={rel_delta:+.2%}, tolerance=±{tolerance:.1%})"
+            )
+        return {
+            "candidate_params": candidate_params,
+            "baseline_params": baseline_params,
+            "relative_delta": round(rel_delta, 6),
+            "relative_delta_pct": round(rel_delta * 100.0, 2),
+            "tolerance": tolerance,
+            "within_budget": within_budget,
+        }
 
     def to_json(self, indent: int = 2) -> str:
         """Serialize TrialConfig losslessly to JSON string."""

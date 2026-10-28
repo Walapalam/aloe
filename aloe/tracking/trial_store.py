@@ -79,6 +79,13 @@ class TrialMetrics(BaseModel):
     final_train_loss: float = 0.0
     val_loss: float | None = None
     tool_accuracy: float | None = None
+    ast_parse_success_rate: float | None = None
+    ast_tool_selection_accuracy: float | None = None
+    ast_argument_name_accuracy: float | None = None
+    ast_argument_value_accuracy: float | None = None
+    ast_exact_match_accuracy: float | None = None
+    param_delta_vs_baseline_pct: float | None = None
+    is_budget_matched_5pct: bool | None = None
     fresh_process_reload: bool = False
 
 

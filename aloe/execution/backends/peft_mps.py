@@ -172,22 +172,32 @@ def tokenize_xlam_sft_example(
     except Exception:
         full_text = f"User: {user_content}\nAssistant: {assistant_msg}"
 
-    tokens = tokenizer(
-        full_text,
-        max_length=max_seq_len,
-        padding="max_length",
-        truncation=True,
-        return_tensors="pt",
-    )
-    input_ids = tokens["input_ids"].squeeze(0)
-    attention_mask = tokens["attention_mask"].squeeze(0)
-
-    # 3. Label masking: mask prompt prefix and padding tokens with -100
-    labels = input_ids.clone()
-    mask_len = min(prompt_len, max_seq_len)
-    labels[:mask_len] = -100
-    if tokenizer.pad_token_id is not None:
-        labels[input_ids == tokenizer.pad_token_id] = -100
+    full_ids = tokenizer.encode(full_text, add_special_tokens=False)
+    if len(full_ids) > max_seq_len:
+        # Left-truncate the long tool-schema prefix so the user query and assistant
+        # JSON tool-call response at the end of the sequence are preserved.
+        asst_len = max(1, len(full_ids) - prompt_len)
+        kept_ids = full_ids[-max_seq_len:]
+        kept_prompt_len = max(0, max_seq_len - asst_len)
+        input_ids = torch.tensor(kept_ids, dtype=torch.long)
+        attention_mask = torch.ones(max_seq_len, dtype=torch.long)
+        labels = input_ids.clone()
+        labels[:kept_prompt_len] = -100
+    else:
+        tokens = tokenizer(
+            full_text,
+            max_length=max_seq_len,
+            padding="max_length",
+            truncation=True,
+            return_tensors="pt",
+        )
+        input_ids = tokens["input_ids"].squeeze(0)
+        attention_mask = tokens["attention_mask"].squeeze(0)
+        labels = input_ids.clone()
+        mask_len = min(prompt_len, max_seq_len)
+        labels[:mask_len] = -100
+        if tokenizer.pad_token_id is not None:
+            labels[input_ids == tokenizer.pad_token_id] = -100
 
     return {
         "input_ids": input_ids,
