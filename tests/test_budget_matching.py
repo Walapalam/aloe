@@ -130,3 +130,64 @@ def test_analytic_counts_match_recorded_peft_runtime_trials() -> None:
                 cfg = TrialConfig.model_validate(rec["trial_config"])
                 runtime_params = rec["metrics"]["trainable_params"]
                 assert cfg.compute_trainable_params(arch, gram) == runtime_params
+
+
+def test_explicit_target_modules_non_default_rank_matches_peft() -> None:
+    """Verify explicit_target_modules at r != 8 uses identical rank/alpha in both compute_trainable_params and PEFT."""
+    import torch.nn as nn
+    from peft import get_peft_model
+    from aloe.architecture.schema import ComponentType, ModuleRecord, Validity
+
+    class ToyModel(nn.Module):
+        def __init__(self) -> None:
+            super().__init__()
+            self.q_proj = nn.Linear(64, 128, bias=False)
+            self.v_proj = nn.Linear(64, 32, bias=False)
+
+        def forward(self, x):
+            return self.q_proj(x), self.v_proj(x)
+
+        def prepare_inputs_for_generation(self, *args, **kwargs):
+            return {}
+
+    arch = ArchitectureDescription(
+        model_id="toy/explicit-test",
+        family="toy",
+        num_layers=1,
+        total_params=10240,
+        topology="uniform",
+        modules=[
+            ModuleRecord(
+                name="q_proj",
+                module_class="Linear",
+                layer_idx=0,
+                component_type=ComponentType.GLOBAL_ATTENTION,
+                validity=Validity.VALID,
+                shape=[128, 64],
+            ),
+            ModuleRecord(
+                name="v_proj",
+                module_class="Linear",
+                layer_idx=0,
+                component_type=ComponentType.GLOBAL_ATTENTION,
+                validity=Validity.VALID,
+                shape=[32, 64],
+            ),
+        ],
+    )
+    cfg = TrialConfig(
+        model_id="toy/explicit-test",
+        group_settings={"global_attention": GroupTrialSetting(enabled=True, rank=16, alpha=32)},
+        explicit_target_modules=["q_proj", "v_proj"],
+    )
+    analytic_params = cfg.compute_trainable_params(arch)
+    assert analytic_params == 16 * (64 + 128) + 16 * (64 + 32)
+
+    peft_kwargs, lora_cfg = cfg.to_peft_lora_config()
+    assert peft_kwargs["rank_pattern"] == {"q_proj": 16, "v_proj": 16}
+    assert peft_kwargs["alpha_pattern"] == {"q_proj": 32, "v_proj": 32}
+
+    peft_model = get_peft_model(ToyModel(), lora_cfg)
+    actual_trainable = sum(p.numel() for p in peft_model.parameters() if p.requires_grad)
+    assert analytic_params == actual_trainable
+

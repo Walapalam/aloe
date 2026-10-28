@@ -135,6 +135,18 @@ class TrialConfig(BaseModel):
                             f"Group '{g_name}' includes excluded target module '{t}'"
                         )
 
+    def _explicit_rank_and_alpha(self) -> tuple[int, int]:
+        """Resolve rank and alpha for explicit_target_modules consistently across config and parameter counting."""
+        explicit_r = min(
+            (g.rank for g in self.group_settings.values() if g.enabled),
+            default=8,
+        )
+        explicit_alpha = min(
+            (g.alpha for g in self.group_settings.values() if g.enabled),
+            default=16,
+        )
+        return explicit_r, explicit_alpha
+
     def to_peft_lora_config(self, grammar: SearchGrammar | None = None) -> tuple[dict[str, Any], Any]:
         """Convert TrialConfig to PEFT LoraConfig keyword arguments and LoraConfig instance."""
         from peft import LoraConfig, TaskType
@@ -147,15 +159,15 @@ class TrialConfig(BaseModel):
         alpha_pattern: dict[str, int] = {}
 
         if self.explicit_target_modules:
+            explicit_r, explicit_alpha = self._explicit_rank_and_alpha()
             for mod in self.explicit_target_modules:
                 if grammar and mod in grammar.excluded:
                     raise InvalidConfigError(
                         f"Explicit target '{mod}' is in grammar exclusions: {grammar.excluded[mod]}"
                     )
                 target_modules.append(mod)
-                # Use default rank and alpha
-                rank_pattern[mod] = 8
-                alpha_pattern[mod] = 16
+                rank_pattern[mod] = explicit_r
+                alpha_pattern[mod] = explicit_alpha
         elif grammar is not None:
             grammar_group_types = {g.component_type.value: g for g in grammar.groups}
             for g_name, g_dim in grammar_group_types.items():
@@ -210,10 +222,7 @@ class TrialConfig(BaseModel):
 
         total_params = 0
         if self.explicit_target_modules:
-            explicit_r = min(
-                (g.rank for g in self.group_settings.values() if g.enabled),
-                default=8,
-            )
+            explicit_r, _ = self._explicit_rank_and_alpha()
             for mod in self.explicit_target_modules:
                 if mod not in shapes:
                     raise InvalidConfigError(f"Module '{mod}' has no 2D linear shape in architecture.")
