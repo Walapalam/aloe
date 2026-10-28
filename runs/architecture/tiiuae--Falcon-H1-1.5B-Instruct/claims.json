@@ -1,0 +1,680 @@
+{
+  "schema_version": "1.0",
+  "run_id": "8c9f7034-bfd8-4030-9cfd-28312ec33ac2",
+  "timestamp_utc": "2026-09-17T13:44:32.399477+00:00",
+  "script": "verify_architecture.py",
+  "model_id": "tiiuae/Falcon-H1-1.5B-Instruct",
+  "model_slug": "tiiuae--Falcon-H1-1.5B-Instruct",
+  "gate_3": {
+    "gate_id": "Gate 3",
+    "name": "Architecture Claims Gate",
+    "status": "PASS",
+    "summary_sentence": "All Model B architectural claims verified: 24-layer parallel hybrid attention/SSM topology confirmed, and all 24 conv1d and 24 out_proj modules enumerated and marked EXCLUDED."
+  },
+  "claims": [
+    {
+      "claim_id": "falcon_h1_parallel_hybrid_structure",
+      "statement": "Model B is a 24-layer parallel hybrid model combining self-attention and Mamba-2 SSM branches operating in parallel on the same normalized hidden state and summed before the FFN.",
+      "status": "PASS",
+      "evidence": {
+        "model_type": "falcon_h1",
+        "num_hidden_layers": 24,
+        "topology": "parallel_hybrid",
+        "mamba_config": {
+          "mamba_d_ssm": 3072,
+          "mamba_n_heads": 48,
+          "mamba_d_head": 64,
+          "mamba_d_state": 256,
+          "mamba_d_conv": 4
+        },
+        "layer_submodules": {
+          "self_attention_branch": "FalconH1Attention (q_proj, k_proj, v_proj, o_proj)",
+          "ssm_branch": "FalconH1Mixer (in_proj, conv1d, norm, out_proj)",
+          "ffn_block": "FalconH1MLP (gate_proj, up_proj, down_proj)",
+          "combination_rule": "hidden_states = mamba_hidden_states + attention_hidden_states"
+        }
+      }
+    },
+    {
+      "claim_id": "falcon_h1_conv1d_outproj_exclusions",
+      "statement": "Model B contains exactly 24 conv1d modules (430,080 params) and 24 out_proj modules (150,994,944 params) in the Mamba mixer path; all 48 modules (151,425,024 params) are marked Validity.EXCLUDED under ADR-005.",
+      "status": "PASS",
+      "evidence": {
+        "conv1d": {
+          "count": 24,
+          "weight_shape": [
+            3584,
+            1,
+            4
+          ],
+          "bias_shape": [
+            3584
+          ],
+          "params_per_module": 17920,
+          "total_params": 430080,
+          "validity": "excluded",
+          "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability.",
+          "modules": [
+            {
+              "name": "model.layers.0.mamba.conv1d",
+              "layer_index": 0,
+              "module_class": "Conv1d",
+              "shape": [
+                3584,
+                1,
+                4
+              ],
+              "param_count": 17920,
+              "validity": "excluded",
+              "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+            },
+            {
+              "name": "model.layers.1.mamba.conv1d",
+              "layer_index": 1,
+              "module_class": "Conv1d",
+              "shape": [
+                3584,
+                1,
+                4
+              ],
+              "param_count": 17920,
+              "validity": "excluded",
+              "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+            },
+            {
+              "name": "model.layers.2.mamba.conv1d",
+              "layer_index": 2,
+              "module_class": "Conv1d",
+              "shape": [
+                3584,
+                1,
+                4
+              ],
+              "param_count": 17920,
+              "validity": "excluded",
+              "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+            },
+            {
+              "name": "model.layers.3.mamba.conv1d",
+              "layer_index": 3,
+              "module_class": "Conv1d",
+              "shape": [
+                3584,
+                1,
+                4
+              ],
+              "param_count": 17920,
+              "validity": "excluded",
+              "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+            },
+            {
+              "name": "model.layers.4.mamba.conv1d",
+              "layer_index": 4,
+              "module_class": "Conv1d",
+              "shape": [
+                3584,
+                1,
+                4
+              ],
+              "param_count": 17920,
+              "validity": "excluded",
+              "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+            },
+            {
+              "name": "model.layers.5.mamba.conv1d",
+              "layer_index": 5,
+              "module_class": "Conv1d",
+              "shape": [
+                3584,
+                1,
+                4
+              ],
+              "param_count": 17920,
+              "validity": "excluded",
+              "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+            },
+            {
+              "name": "model.layers.6.mamba.conv1d",
+              "layer_index": 6,
+              "module_class": "Conv1d",
+              "shape": [
+                3584,
+                1,
+                4
+              ],
+              "param_count": 17920,
+              "validity": "excluded",
+              "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+            },
+            {
+              "name": "model.layers.7.mamba.conv1d",
+              "layer_index": 7,
+              "module_class": "Conv1d",
+              "shape": [
+                3584,
+                1,
+                4
+              ],
+              "param_count": 17920,
+              "validity": "excluded",
+              "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+            },
+            {
+              "name": "model.layers.8.mamba.conv1d",
+              "layer_index": 8,
+              "module_class": "Conv1d",
+              "shape": [
+                3584,
+                1,
+                4
+              ],
+              "param_count": 17920,
+              "validity": "excluded",
+              "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+            },
+            {
+              "name": "model.layers.9.mamba.conv1d",
+              "layer_index": 9,
+              "module_class": "Conv1d",
+              "shape": [
+                3584,
+                1,
+                4
+              ],
+              "param_count": 17920,
+              "validity": "excluded",
+              "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+            },
+            {
+              "name": "model.layers.10.mamba.conv1d",
+              "layer_index": 10,
+              "module_class": "Conv1d",
+              "shape": [
+                3584,
+                1,
+                4
+              ],
+              "param_count": 17920,
+              "validity": "excluded",
+              "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+            },
+            {
+              "name": "model.layers.11.mamba.conv1d",
+              "layer_index": 11,
+              "module_class": "Conv1d",
+              "shape": [
+                3584,
+                1,
+                4
+              ],
+              "param_count": 17920,
+              "validity": "excluded",
+              "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+            },
+            {
+              "name": "model.layers.12.mamba.conv1d",
+              "layer_index": 12,
+              "module_class": "Conv1d",
+              "shape": [
+                3584,
+                1,
+                4
+              ],
+              "param_count": 17920,
+              "validity": "excluded",
+              "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+            },
+            {
+              "name": "model.layers.13.mamba.conv1d",
+              "layer_index": 13,
+              "module_class": "Conv1d",
+              "shape": [
+                3584,
+                1,
+                4
+              ],
+              "param_count": 17920,
+              "validity": "excluded",
+              "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+            },
+            {
+              "name": "model.layers.14.mamba.conv1d",
+              "layer_index": 14,
+              "module_class": "Conv1d",
+              "shape": [
+                3584,
+                1,
+                4
+              ],
+              "param_count": 17920,
+              "validity": "excluded",
+              "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+            },
+            {
+              "name": "model.layers.15.mamba.conv1d",
+              "layer_index": 15,
+              "module_class": "Conv1d",
+              "shape": [
+                3584,
+                1,
+                4
+              ],
+              "param_count": 17920,
+              "validity": "excluded",
+              "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+            },
+            {
+              "name": "model.layers.16.mamba.conv1d",
+              "layer_index": 16,
+              "module_class": "Conv1d",
+              "shape": [
+                3584,
+                1,
+                4
+              ],
+              "param_count": 17920,
+              "validity": "excluded",
+              "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+            },
+            {
+              "name": "model.layers.17.mamba.conv1d",
+              "layer_index": 17,
+              "module_class": "Conv1d",
+              "shape": [
+                3584,
+                1,
+                4
+              ],
+              "param_count": 17920,
+              "validity": "excluded",
+              "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+            },
+            {
+              "name": "model.layers.18.mamba.conv1d",
+              "layer_index": 18,
+              "module_class": "Conv1d",
+              "shape": [
+                3584,
+                1,
+                4
+              ],
+              "param_count": 17920,
+              "validity": "excluded",
+              "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+            },
+            {
+              "name": "model.layers.19.mamba.conv1d",
+              "layer_index": 19,
+              "module_class": "Conv1d",
+              "shape": [
+                3584,
+                1,
+                4
+              ],
+              "param_count": 17920,
+              "validity": "excluded",
+              "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+            },
+            {
+              "name": "model.layers.20.mamba.conv1d",
+              "layer_index": 20,
+              "module_class": "Conv1d",
+              "shape": [
+                3584,
+                1,
+                4
+              ],
+              "param_count": 17920,
+              "validity": "excluded",
+              "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+            },
+            {
+              "name": "model.layers.21.mamba.conv1d",
+              "layer_index": 21,
+              "module_class": "Conv1d",
+              "shape": [
+                3584,
+                1,
+                4
+              ],
+              "param_count": 17920,
+              "validity": "excluded",
+              "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+            },
+            {
+              "name": "model.layers.22.mamba.conv1d",
+              "layer_index": 22,
+              "module_class": "Conv1d",
+              "shape": [
+                3584,
+                1,
+                4
+              ],
+              "param_count": 17920,
+              "validity": "excluded",
+              "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+            },
+            {
+              "name": "model.layers.23.mamba.conv1d",
+              "layer_index": 23,
+              "module_class": "Conv1d",
+              "shape": [
+                3584,
+                1,
+                4
+              ],
+              "param_count": 17920,
+              "validity": "excluded",
+              "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+            }
+          ]
+        },
+        "out_proj": {
+          "count": 24,
+          "weight_shape": [
+            2048,
+            3072
+          ],
+          "bias": null,
+          "params_per_module": 6291456,
+          "total_params": 150994944,
+          "validity": "excluded",
+          "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2.",
+          "modules": [
+            {
+              "name": "model.layers.0.mamba.out_proj",
+              "layer_index": 0,
+              "module_class": "Linear",
+              "shape": [
+                2048,
+                3072
+              ],
+              "param_count": 6291456,
+              "validity": "excluded",
+              "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+            },
+            {
+              "name": "model.layers.1.mamba.out_proj",
+              "layer_index": 1,
+              "module_class": "Linear",
+              "shape": [
+                2048,
+                3072
+              ],
+              "param_count": 6291456,
+              "validity": "excluded",
+              "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+            },
+            {
+              "name": "model.layers.2.mamba.out_proj",
+              "layer_index": 2,
+              "module_class": "Linear",
+              "shape": [
+                2048,
+                3072
+              ],
+              "param_count": 6291456,
+              "validity": "excluded",
+              "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+            },
+            {
+              "name": "model.layers.3.mamba.out_proj",
+              "layer_index": 3,
+              "module_class": "Linear",
+              "shape": [
+                2048,
+                3072
+              ],
+              "param_count": 6291456,
+              "validity": "excluded",
+              "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+            },
+            {
+              "name": "model.layers.4.mamba.out_proj",
+              "layer_index": 4,
+              "module_class": "Linear",
+              "shape": [
+                2048,
+                3072
+              ],
+              "param_count": 6291456,
+              "validity": "excluded",
+              "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+            },
+            {
+              "name": "model.layers.5.mamba.out_proj",
+              "layer_index": 5,
+              "module_class": "Linear",
+              "shape": [
+                2048,
+                3072
+              ],
+              "param_count": 6291456,
+              "validity": "excluded",
+              "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+            },
+            {
+              "name": "model.layers.6.mamba.out_proj",
+              "layer_index": 6,
+              "module_class": "Linear",
+              "shape": [
+                2048,
+                3072
+              ],
+              "param_count": 6291456,
+              "validity": "excluded",
+              "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+            },
+            {
+              "name": "model.layers.7.mamba.out_proj",
+              "layer_index": 7,
+              "module_class": "Linear",
+              "shape": [
+                2048,
+                3072
+              ],
+              "param_count": 6291456,
+              "validity": "excluded",
+              "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+            },
+            {
+              "name": "model.layers.8.mamba.out_proj",
+              "layer_index": 8,
+              "module_class": "Linear",
+              "shape": [
+                2048,
+                3072
+              ],
+              "param_count": 6291456,
+              "validity": "excluded",
+              "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+            },
+            {
+              "name": "model.layers.9.mamba.out_proj",
+              "layer_index": 9,
+              "module_class": "Linear",
+              "shape": [
+                2048,
+                3072
+              ],
+              "param_count": 6291456,
+              "validity": "excluded",
+              "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+            },
+            {
+              "name": "model.layers.10.mamba.out_proj",
+              "layer_index": 10,
+              "module_class": "Linear",
+              "shape": [
+                2048,
+                3072
+              ],
+              "param_count": 6291456,
+              "validity": "excluded",
+              "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+            },
+            {
+              "name": "model.layers.11.mamba.out_proj",
+              "layer_index": 11,
+              "module_class": "Linear",
+              "shape": [
+                2048,
+                3072
+              ],
+              "param_count": 6291456,
+              "validity": "excluded",
+              "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+            },
+            {
+              "name": "model.layers.12.mamba.out_proj",
+              "layer_index": 12,
+              "module_class": "Linear",
+              "shape": [
+                2048,
+                3072
+              ],
+              "param_count": 6291456,
+              "validity": "excluded",
+              "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+            },
+            {
+              "name": "model.layers.13.mamba.out_proj",
+              "layer_index": 13,
+              "module_class": "Linear",
+              "shape": [
+                2048,
+                3072
+              ],
+              "param_count": 6291456,
+              "validity": "excluded",
+              "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+            },
+            {
+              "name": "model.layers.14.mamba.out_proj",
+              "layer_index": 14,
+              "module_class": "Linear",
+              "shape": [
+                2048,
+                3072
+              ],
+              "param_count": 6291456,
+              "validity": "excluded",
+              "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+            },
+            {
+              "name": "model.layers.15.mamba.out_proj",
+              "layer_index": 15,
+              "module_class": "Linear",
+              "shape": [
+                2048,
+                3072
+              ],
+              "param_count": 6291456,
+              "validity": "excluded",
+              "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+            },
+            {
+              "name": "model.layers.16.mamba.out_proj",
+              "layer_index": 16,
+              "module_class": "Linear",
+              "shape": [
+                2048,
+                3072
+              ],
+              "param_count": 6291456,
+              "validity": "excluded",
+              "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+            },
+            {
+              "name": "model.layers.17.mamba.out_proj",
+              "layer_index": 17,
+              "module_class": "Linear",
+              "shape": [
+                2048,
+                3072
+              ],
+              "param_count": 6291456,
+              "validity": "excluded",
+              "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+            },
+            {
+              "name": "model.layers.18.mamba.out_proj",
+              "layer_index": 18,
+              "module_class": "Linear",
+              "shape": [
+                2048,
+                3072
+              ],
+              "param_count": 6291456,
+              "validity": "excluded",
+              "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+            },
+            {
+              "name": "model.layers.19.mamba.out_proj",
+              "layer_index": 19,
+              "module_class": "Linear",
+              "shape": [
+                2048,
+                3072
+              ],
+              "param_count": 6291456,
+              "validity": "excluded",
+              "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+            },
+            {
+              "name": "model.layers.20.mamba.out_proj",
+              "layer_index": 20,
+              "module_class": "Linear",
+              "shape": [
+                2048,
+                3072
+              ],
+              "param_count": 6291456,
+              "validity": "excluded",
+              "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+            },
+            {
+              "name": "model.layers.21.mamba.out_proj",
+              "layer_index": 21,
+              "module_class": "Linear",
+              "shape": [
+                2048,
+                3072
+              ],
+              "param_count": 6291456,
+              "validity": "excluded",
+              "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+            },
+            {
+              "name": "model.layers.22.mamba.out_proj",
+              "layer_index": 22,
+              "module_class": "Linear",
+              "shape": [
+                2048,
+                3072
+              ],
+              "param_count": 6291456,
+              "validity": "excluded",
+              "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+            },
+            {
+              "name": "model.layers.23.mamba.out_proj",
+              "layer_index": 23,
+              "module_class": "Linear",
+              "shape": [
+                2048,
+                3072
+              ],
+              "param_count": 6291456,
+              "validity": "excluded",
+              "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+            }
+          ]
+        },
+        "combined_excluded_params": 151425024,
+        "exclusion_basis": "ADR-005 / Borobia et al. (arXiv:2604.22127) Sec. 3.2"
+      }
+    }
+  ],
+  "status": "PASS"
+}

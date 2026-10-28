@@ -6,8 +6,11 @@ from pathlib import Path
 import pytest
 
 from aloe.architecture.schema import ArchitectureDescription
+from aloe.execution.backends.peft_mps import _ensure_peft_torchao_compat
 from aloe.execution.trial_config import GroupTrialSetting, InvalidConfigError, TrialConfig
 from aloe.search_space.schema import SearchGrammar
+
+_ensure_peft_torchao_compat()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 

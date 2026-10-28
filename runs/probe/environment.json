@@ -1,0 +1,347 @@
+{
+  "schema_version": "1.0",
+  "run_id": "3b1b845d-0242-42a6-8ddf-98fb6a64b5b3",
+  "timestamp_utc": "2026-09-17T13:05:56.786104+00:00",
+  "script": "probe_environment.py",
+  "git_commit": "ac96ece0eae4b1bcbc991e0d3e3f96c7760bc8a4",
+  "environment": {
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "chip": "Apple M1 Max",
+    "unified_memory_gb": 64.0,
+    "python": "3.12.14",
+    "torch": "2.14.0",
+    "backend": "torch_mps",
+    "library_versions": {
+      "transformers": "5.17.0",
+      "peft": "0.21.0",
+      "accelerate": "1.15.0",
+      "huggingface_hub": "1.32.0",
+      "datasets": "5.0.1",
+      "mlx": "0.32.2",
+      "mlx-lm": "0.31.3",
+      "psutil": "7.2.2",
+      "pydantic": "2.13.5",
+      "safetensors": "0.8.0",
+      "tokenizers": "0.23.2",
+      "typer": "0.27.2",
+      "rich": "15.0.0",
+      "pytest": "9.1.1",
+      "ruff": "0.16.8"
+    }
+  },
+  "results": {
+    "system": {
+      "platform": "macOS-26.6.2-arm64-arm-64bit",
+      "os_name": "Darwin",
+      "os_release": "25.6.0",
+      "architecture": "arm64",
+      "processor": "arm",
+      "chip": "Apple M1 Max",
+      "cpu_physical_cores": 10,
+      "cpu_logical_cores": 10
+    },
+    "memory": {
+      "total_bytes": 68719476736,
+      "total_gb": 64.0,
+      "available_bytes": 43320016896,
+      "available_gb": 40.34,
+      "used_bytes": 24019140608,
+      "used_percent": 37.0,
+      "memory_type": "unified"
+    },
+    "disk": {
+      "target_path": "/Users/walapalam/Development/fyp/aloe",
+      "total_bytes": 994662584320,
+      "total_gb": 926.35,
+      "free_bytes": 806996975616,
+      "free_gb": 751.57,
+      "used_bytes": 187665608704,
+      "used_percent": 18.87,
+      "sufficient_for_pilot_models": true
+    },
+    "python": {
+      "version": "3.12.14",
+      "executable": "/Users/walapalam/Development/fyp/aloe/.venv/bin/python",
+      "compiler": "Clang 22.1.3 "
+    },
+    "torch": {
+      "version": "2.14.0",
+      "mps_available": true,
+      "mps_built": true,
+      "cuda_available": false,
+      "default_device": "mps",
+      "mps_bf16_test": "PASS",
+      "allocated_tensor_bytes": 2097152
+    },
+    "packages": {
+      "transformers": {
+        "installed": true,
+        "version": "5.17.0",
+        "import_error": null
+      },
+      "peft": {
+        "installed": true,
+        "version": "0.21.0",
+        "import_error": null
+      },
+      "accelerate": {
+        "installed": true,
+        "version": "1.15.0",
+        "import_error": null
+      },
+      "huggingface_hub": {
+        "installed": true,
+        "version": "1.32.0",
+        "import_error": null
+      },
+      "datasets": {
+        "installed": true,
+        "version": "5.0.1",
+        "import_error": null
+      },
+      "mlx": {
+        "installed": true,
+        "version": "0.32.2",
+        "import_error": null
+      },
+      "mlx-lm": {
+        "installed": true,
+        "version": "0.31.3",
+        "import_error": null
+      },
+      "psutil": {
+        "installed": true,
+        "version": "7.2.2",
+        "import_error": null
+      },
+      "pydantic": {
+        "installed": true,
+        "version": "2.13.5",
+        "import_error": null
+      },
+      "safetensors": {
+        "installed": true,
+        "version": "0.8.0",
+        "import_error": null
+      },
+      "tokenizers": {
+        "installed": true,
+        "version": "0.23.2",
+        "import_error": null
+      },
+      "typer": {
+        "installed": true,
+        "version": "0.27.2",
+        "import_error": null
+      },
+      "rich": {
+        "installed": true,
+        "version": "15.0.0",
+        "import_error": null
+      },
+      "pytest": {
+        "installed": true,
+        "version": "9.1.1",
+        "import_error": null
+      },
+      "ruff": {
+        "installed": true,
+        "version": "0.16.8",
+        "import_error": null
+      }
+    },
+    "bitsandbytes": {
+      "tested": true,
+      "installed": false,
+      "functional": false,
+      "failure_mode": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nModuleNotFoundError: No module named 'bitsandbytes'",
+      "explanation": "bitsandbytes is not installed and cannot run on Apple Silicon MPS (kernels compiled for NVIDIA CUDA only)."
+    },
+    "unsloth": {
+      "tested": true,
+      "installed": false,
+      "functional": false,
+      "failure_mode": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nModuleNotFoundError: No module named 'unsloth'",
+      "explanation": "unsloth is not installed and cannot run on Apple Silicon MPS (kernels compiled for NVIDIA CUDA only)."
+    }
+  },
+  "platform": {
+    "system": "Darwin",
+    "release": "25.6.0",
+    "mac_version": "26.6.2",
+    "build_version": "25G83",
+    "platform_string": "macOS-26.6.2-arm64-arm-64bit",
+    "architecture": "arm64",
+    "processor": "arm"
+  },
+  "cpu_hardware": {
+    "brand_string": "Apple M1 Max",
+    "hw_model": "MacBookPro18,2",
+    "sysctl_memsize_bytes": 68719476736,
+    "sysctl_memsize_gb": 64.0,
+    "logical_cpu_count": 10,
+    "physical_cpu_count": 10
+  },
+  "unified_memory": {
+    "total_bytes": 68719476736,
+    "total_gb": 64.0,
+    "available_bytes": 43320016896,
+    "available_gb": 40.34,
+    "used_bytes": 24019140608,
+    "used_gb": 22.37,
+    "percent_used": 37.0
+  },
+  "disk": {
+    "cwd": "/Users/walapalam/Development/fyp/aloe",
+    "total_bytes": 994662584320,
+    "total_gb": 926.35,
+    "free_bytes": 806996975616,
+    "free_gb": 751.57,
+    "used_bytes": 187665608704,
+    "used_gb": 174.78,
+    "percent_free": 81.13
+  },
+  "pytorch": {
+    "installed": true,
+    "version": "2.14.0",
+    "mps_available": true,
+    "mps_built": true,
+    "cuda_available": false,
+    "default_device": "mps",
+    "mps": {
+      "is_available": true,
+      "is_built": true,
+      "bf16_allocation_test": "PASS",
+      "test_tensor_shape": [
+        1024,
+        1024
+      ],
+      "test_tensor_device": "mps:0",
+      "test_tensor_dtype": "torch.bfloat16",
+      "initial_allocated_bytes": 0,
+      "tensor_allocated_bytes": 2097152,
+      "freed_allocated_bytes": 0,
+      "driver_allocated_bytes": 393216
+    }
+  },
+  "mlx": {
+    "installed": true,
+    "version": "0.32.2",
+    "default_device": "Device(gpu, 0)",
+    "metal_available": true,
+    "device_info": {
+      "device_name": "Apple M1 Max",
+      "memory_size_bytes": 68719476736,
+      "memory_size_gb": 64.0,
+      "max_recommended_working_set_bytes": 55662788608,
+      "max_recommended_working_set_gb": 51.84,
+      "architecture": "applegpu_g13s"
+    },
+    "mlx_lm": {
+      "installed": true,
+      "version": "0.31.3"
+    }
+  },
+  "key_packages": {
+    "transformers": {
+      "installed": true,
+      "version": "5.17.0",
+      "import_error": null
+    },
+    "peft": {
+      "installed": true,
+      "version": "0.21.0",
+      "import_error": null
+    },
+    "accelerate": {
+      "installed": true,
+      "version": "1.15.0",
+      "import_error": null
+    },
+    "huggingface_hub": {
+      "installed": true,
+      "version": "1.32.0",
+      "import_error": null
+    },
+    "datasets": {
+      "installed": true,
+      "version": "5.0.1",
+      "import_error": null
+    },
+    "mlx": {
+      "installed": true,
+      "version": "0.32.2",
+      "import_error": null
+    },
+    "mlx-lm": {
+      "installed": true,
+      "version": "0.31.3",
+      "import_error": null
+    },
+    "psutil": {
+      "installed": true,
+      "version": "7.2.2",
+      "import_error": null
+    },
+    "pydantic": {
+      "installed": true,
+      "version": "2.13.5",
+      "import_error": null
+    },
+    "safetensors": {
+      "installed": true,
+      "version": "0.8.0",
+      "import_error": null
+    },
+    "tokenizers": {
+      "installed": true,
+      "version": "0.23.2",
+      "import_error": null
+    },
+    "typer": {
+      "installed": true,
+      "version": "0.27.2",
+      "import_error": null
+    },
+    "rich": {
+      "installed": true,
+      "version": "15.0.0",
+      "import_error": null
+    },
+    "pytest": {
+      "installed": true,
+      "version": "9.1.1",
+      "import_error": null
+    },
+    "ruff": {
+      "installed": true,
+      "version": "0.16.8",
+      "import_error": null
+    }
+  },
+  "prohibited_packages": {
+    "bitsandbytes": {
+      "tested": true,
+      "installed": false,
+      "functional": false,
+      "failure_mode": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nModuleNotFoundError: No module named 'bitsandbytes'",
+      "verbatim_stderr": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nModuleNotFoundError: No module named 'bitsandbytes'\n",
+      "verbatim_stdout": "",
+      "exit_code": 1,
+      "explanation": "bitsandbytes is not installed and cannot run on Apple Silicon MPS (kernels compiled for NVIDIA CUDA only)."
+    },
+    "unsloth": {
+      "tested": true,
+      "installed": false,
+      "functional": false,
+      "failure_mode": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nModuleNotFoundError: No module named 'unsloth'",
+      "verbatim_stderr": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nModuleNotFoundError: No module named 'unsloth'\n",
+      "verbatim_stdout": "",
+      "exit_code": 1,
+      "explanation": "unsloth is not installed and cannot run on Apple Silicon MPS (kernels compiled for NVIDIA CUDA only)."
+    }
+  },
+  "status": "PASS",
+  "failures": [],
+  "not_determined": []
+}

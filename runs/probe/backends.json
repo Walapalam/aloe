@@ -1,0 +1,352 @@
+{
+  "schema_version": "1.0",
+  "run_id": "40244e2b-3e8d-412e-b997-d787e2371e8b",
+  "timestamp_utc": "2026-09-17T13:06:03.757049+00:00",
+  "script": "probe_backends.py",
+  "git_commit": "ac96ece0eae4b1bcbc991e0d3e3f96c7760bc8a4",
+  "environment": {
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "chip": "Apple M1 Max",
+    "python": "3.12.14",
+    "torch": "2.14.0",
+    "backend": "torch_mps"
+  },
+  "gate_1": {
+    "gate_id": "Gate 1",
+    "name": "Backend Capability Gate",
+    "status": "PASS",
+    "summary_sentence": "Per-group rank and alpha assignment IS possible on this machine, via PEFT on MPS, evidenced by runs/probe/backends.json:backends.peft_mps.empirical_test.status PASS.",
+    "passing_backend": "peft_mps",
+    "fallback_options": null
+  },
+  "backends": {
+    "peft_mps": {
+      "name": "peft",
+      "version": "0.21.0",
+      "device": "mps",
+      "supports_per_group_rank_alpha": true,
+      "mechanism": "peft.LoraConfig(rank_pattern=..., alpha_pattern=...) maps module name regex/suffix patterns to specific rank and alpha values during layer creation in LoraModel._create_and_replace.",
+      "empirical_test": {
+        "model_architecture": "ToyModel (2-layer Attention + MLP)",
+        "target_modules": [
+          "q_proj",
+          "k_proj",
+          "v_proj",
+          "o_proj",
+          "gate_proj",
+          "up_proj",
+          "down_proj"
+        ],
+        "requested_rank_pattern": {
+          "gate_proj": 16,
+          "up_proj": 16,
+          "down_proj": 16
+        },
+        "requested_alpha_pattern": {
+          "gate_proj": 32,
+          "up_proj": 32,
+          "down_proj": 32
+        },
+        "verified_modules": [
+          {
+            "name": "base_model.model.layers.0.self_attn.q_proj",
+            "target": "q_proj",
+            "actual_r": 8,
+            "actual_alpha": 16,
+            "actual_scaling": 2.0,
+            "param_shape": [
+              8,
+              32
+            ]
+          },
+          {
+            "name": "base_model.model.layers.0.self_attn.k_proj",
+            "target": "k_proj",
+            "actual_r": 8,
+            "actual_alpha": 16,
+            "actual_scaling": 2.0,
+            "param_shape": [
+              8,
+              32
+            ]
+          },
+          {
+            "name": "base_model.model.layers.0.self_attn.v_proj",
+            "target": "v_proj",
+            "actual_r": 8,
+            "actual_alpha": 16,
+            "actual_scaling": 2.0,
+            "param_shape": [
+              8,
+              32
+            ]
+          },
+          {
+            "name": "base_model.model.layers.0.self_attn.o_proj",
+            "target": "o_proj",
+            "actual_r": 8,
+            "actual_alpha": 16,
+            "actual_scaling": 2.0,
+            "param_shape": [
+              8,
+              32
+            ]
+          },
+          {
+            "name": "base_model.model.layers.0.mlp.gate_proj",
+            "target": "gate_proj",
+            "actual_r": 16,
+            "actual_alpha": 32,
+            "actual_scaling": 2.0,
+            "param_shape": [
+              16,
+              32
+            ]
+          },
+          {
+            "name": "base_model.model.layers.0.mlp.up_proj",
+            "target": "up_proj",
+            "actual_r": 16,
+            "actual_alpha": 32,
+            "actual_scaling": 2.0,
+            "param_shape": [
+              16,
+              32
+            ]
+          },
+          {
+            "name": "base_model.model.layers.0.mlp.down_proj",
+            "target": "down_proj",
+            "actual_r": 16,
+            "actual_alpha": 32,
+            "actual_scaling": 2.0,
+            "param_shape": [
+              16,
+              64
+            ]
+          },
+          {
+            "name": "base_model.model.layers.1.self_attn.q_proj",
+            "target": "q_proj",
+            "actual_r": 8,
+            "actual_alpha": 16,
+            "actual_scaling": 2.0,
+            "param_shape": [
+              8,
+              32
+            ]
+          },
+          {
+            "name": "base_model.model.layers.1.self_attn.k_proj",
+            "target": "k_proj",
+            "actual_r": 8,
+            "actual_alpha": 16,
+            "actual_scaling": 2.0,
+            "param_shape": [
+              8,
+              32
+            ]
+          },
+          {
+            "name": "base_model.model.layers.1.self_attn.v_proj",
+            "target": "v_proj",
+            "actual_r": 8,
+            "actual_alpha": 16,
+            "actual_scaling": 2.0,
+            "param_shape": [
+              8,
+              32
+            ]
+          },
+          {
+            "name": "base_model.model.layers.1.self_attn.o_proj",
+            "target": "o_proj",
+            "actual_r": 8,
+            "actual_alpha": 16,
+            "actual_scaling": 2.0,
+            "param_shape": [
+              8,
+              32
+            ]
+          },
+          {
+            "name": "base_model.model.layers.1.mlp.gate_proj",
+            "target": "gate_proj",
+            "actual_r": 16,
+            "actual_alpha": 32,
+            "actual_scaling": 2.0,
+            "param_shape": [
+              16,
+              32
+            ]
+          },
+          {
+            "name": "base_model.model.layers.1.mlp.up_proj",
+            "target": "up_proj",
+            "actual_r": 16,
+            "actual_alpha": 32,
+            "actual_scaling": 2.0,
+            "param_shape": [
+              16,
+              32
+            ]
+          },
+          {
+            "name": "base_model.model.layers.1.mlp.down_proj",
+            "target": "down_proj",
+            "actual_r": 16,
+            "actual_alpha": 32,
+            "actual_scaling": 2.0,
+            "param_shape": [
+              16,
+              64
+            ]
+          }
+        ],
+        "gradient_flow": {
+          "backward_pass_success": true,
+          "adapter_param_gradients": [
+            {
+              "param": "base_model.model.layers.0.self_attn.q_proj.lora_A.default.weight",
+              "norm": 1808.591552734375
+            },
+            {
+              "param": "base_model.model.layers.0.self_attn.q_proj.lora_B.default.weight",
+              "norm": 684.6581420898438
+            },
+            {
+              "param": "base_model.model.layers.0.self_attn.k_proj.lora_A.default.weight",
+              "norm": 1283.466552734375
+            },
+            {
+              "param": "base_model.model.layers.0.self_attn.k_proj.lora_B.default.weight",
+              "norm": 956.1041259765625
+            },
+            {
+              "param": "base_model.model.layers.0.self_attn.v_proj.lora_A.default.weight",
+              "norm": 1708.236083984375
+            },
+            {
+              "param": "base_model.model.layers.0.self_attn.v_proj.lora_B.default.weight",
+              "norm": 760.3619995117188
+            },
+            {
+              "param": "base_model.model.layers.0.self_attn.o_proj.lora_A.default.weight",
+              "norm": 3337.446044921875
+            },
+            {
+              "param": "base_model.model.layers.0.self_attn.o_proj.lora_B.default.weight",
+              "norm": 1346.2769775390625
+            },
+            {
+              "param": "base_model.model.layers.0.mlp.gate_proj.lora_A.default.weight",
+              "norm": 1863.2720947265625
+            },
+            {
+              "param": "base_model.model.layers.0.mlp.gate_proj.lora_B.default.weight",
+              "norm": 1070.104736328125
+            },
+            {
+              "param": "base_model.model.layers.0.mlp.up_proj.lora_A.default.weight",
+              "norm": 1696.705322265625
+            },
+            {
+              "param": "base_model.model.layers.0.mlp.up_proj.lora_B.default.weight",
+              "norm": 1007.0320434570312
+            },
+            {
+              "param": "base_model.model.layers.0.mlp.down_proj.lora_A.default.weight",
+              "norm": 2350.019775390625
+            },
+            {
+              "param": "base_model.model.layers.0.mlp.down_proj.lora_B.default.weight",
+              "norm": 1033.923095703125
+            },
+            {
+              "param": "base_model.model.layers.1.self_attn.q_proj.lora_A.default.weight",
+              "norm": 886.885498046875
+            },
+            {
+              "param": "base_model.model.layers.1.self_attn.q_proj.lora_B.default.weight",
+              "norm": 480.6756896972656
+            },
+            {
+              "param": "base_model.model.layers.1.self_attn.k_proj.lora_A.default.weight",
+              "norm": 1069.5064697265625
+            },
+            {
+              "param": "base_model.model.layers.1.self_attn.k_proj.lora_B.default.weight",
+              "norm": 430.1510009765625
+            },
+            {
+              "param": "base_model.model.layers.1.self_attn.v_proj.lora_A.default.weight",
+              "norm": 1326.338623046875
+            },
+            {
+              "param": "base_model.model.layers.1.self_attn.v_proj.lora_B.default.weight",
+              "norm": 606.774658203125
+            },
+            {
+              "param": "base_model.model.layers.1.self_attn.o_proj.lora_A.default.weight",
+              "norm": 1317.4322509765625
+            },
+            {
+              "param": "base_model.model.layers.1.self_attn.o_proj.lora_B.default.weight",
+              "norm": 1070.28662109375
+            },
+            {
+              "param": "base_model.model.layers.1.mlp.gate_proj.lora_A.default.weight",
+              "norm": 1743.19482421875
+            },
+            {
+              "param": "base_model.model.layers.1.mlp.gate_proj.lora_B.default.weight",
+              "norm": 1202.620361328125
+            },
+            {
+              "param": "base_model.model.layers.1.mlp.up_proj.lora_A.default.weight",
+              "norm": 1929.1026611328125
+            },
+            {
+              "param": "base_model.model.layers.1.mlp.up_proj.lora_B.default.weight",
+              "norm": 1297.7117919921875
+            },
+            {
+              "param": "base_model.model.layers.1.mlp.down_proj.lora_A.default.weight",
+              "norm": 2624.73681640625
+            },
+            {
+              "param": "base_model.model.layers.1.mlp.down_proj.lora_B.default.weight",
+              "norm": 1234.8258056640625
+            }
+          ]
+        },
+        "distinct_ranks_count": 2,
+        "distinct_alphas_count": 2,
+        "test_passed": true
+      },
+      "status": "PASS"
+    },
+    "mlx_lm": {
+      "name": "mlx-lm",
+      "version": "0.31.3",
+      "supports_per_group_rank_alpha": false,
+      "source_inspection": {
+        "entrypoint": "mlx_lm.tuner.linear_to_lora_layers",
+        "signature": "(model: mlx.nn.layers.base.Module, num_layers: int, config: Dict, use_dora: bool = False)",
+        "keys_filtering_supported": true,
+        "per_module_rank_supported": false,
+        "evidence": "mlx_lm.tuner.linear_to_lora_layers takes config['rank'] (int) and config['scale'] (float) as global parameters and passes them to LoRALayer.from_base. The inner helper to_lora(layer) does not receive module names, making per-module dictionary rank lookup impossible. Passing a dictionary to config['rank'] causes a TypeError when constructing mx.random.uniform."
+      },
+      "empirical_test": {
+        "uniform_lora": "PASS",
+        "key_filtering_lora": "PASS",
+        "per_module_dict_rank_lora": "FAIL: TypeError",
+        "error_message": "TypeError: uniform(): incompatible function arguments. The following argument types are supported:\n    1. uniform(low: scalar | array = 0, high: scalar | array = 1, shape: Sequence[int] = [], dtype: Dtype | None = float32, key: array | None = None, stream: StreamOrDevice = None) -> array\n\nInvoked with types: kwargs = { low: float, high: float, shape: tuple }"
+      },
+      "status": "UNIFORM_ONLY"
+    }
+  },
+  "status": "PASS",
+  "failures": [],
+  "not_determined": []
+}

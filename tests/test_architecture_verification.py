@@ -188,6 +188,8 @@ def test_falcon_h1_adr005_exclusions_under_validity() -> None:
 
 def test_meta_device_inspection_full_models() -> None:
     reg = ModelRegistry("runs/models")
+    if not all(Path(m.model.local_snapshot_path).is_dir() for m in reg.list_models()):
+        pytest.skip("Local HF cache snapshots from acquisition.json are not mounted on this host")
 
     # Verify Model A meta loading & inspection
     model_a = reg.load_model_meta("google/gemma-4-E2B-it")

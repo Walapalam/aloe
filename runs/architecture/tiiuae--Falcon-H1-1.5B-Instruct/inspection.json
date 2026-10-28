@@ -1,0 +1,4990 @@
+{
+  "schema_version": "1.0",
+  "run_id": "8c9f7034-bfd8-4030-9cfd-28312ec33ac2",
+  "timestamp_utc": "2026-09-17T13:44:32.399477+00:00",
+  "script": "verify_architecture.py",
+  "model_id": "tiiuae/Falcon-H1-1.5B-Instruct",
+  "model_slug": "tiiuae--Falcon-H1-1.5B-Instruct",
+  "revision": "80ebc50d7799a440b96c93bb6686a3924a09b0cb",
+  "backend": "peft_mps",
+  "architecture": {
+    "model_id": "tiiuae/Falcon-H1-1.5B-Instruct",
+    "family": "falcon_h1",
+    "num_layers": 24,
+    "total_params": 1554863488,
+    "topology": "parallel_hybrid",
+    "adaptable_types": [
+      "ffn",
+      "ssm",
+      "global_attention"
+    ],
+    "modules_count": 339,
+    "modules": [
+      {
+        "name": "model.embed_tokens",
+        "module_class": "Embedding",
+        "layer_index": null,
+        "shape": [
+          65537,
+          2048
+        ],
+        "param_count": 134219776,
+        "parent": "model",
+        "is_linear": false,
+        "component_type": "embedding",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.0.feed_forward.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 0,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.0.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.0.feed_forward.up_proj",
+        "module_class": "Linear",
+        "layer_index": 0,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.0.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.0.feed_forward.down_proj",
+        "module_class": "Linear",
+        "layer_index": 0,
+        "shape": [
+          2048,
+          4608
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.0.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.0.mamba",
+        "module_class": "FalconH1Mixer",
+        "layer_index": 0,
+        "shape": null,
+        "param_count": 144,
+        "parent": "model.layers.0",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.0.mamba.conv1d",
+        "module_class": "Conv1d",
+        "layer_index": 0,
+        "shape": [
+          3584,
+          1,
+          4
+        ],
+        "param_count": 17920,
+        "parent": "model.layers.0.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+      },
+      {
+        "name": "model.layers.0.mamba.in_proj",
+        "module_class": "Linear",
+        "layer_index": 0,
+        "shape": [
+          6704,
+          2048
+        ],
+        "param_count": 13729792,
+        "parent": "model.layers.0.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.0.mamba.norm",
+        "module_class": "FalconH1RMSNormGated",
+        "layer_index": 0,
+        "shape": [
+          3072
+        ],
+        "param_count": 3072,
+        "parent": "model.layers.0.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.0.mamba.out_proj",
+        "module_class": "Linear",
+        "layer_index": 0,
+        "shape": [
+          2048,
+          3072
+        ],
+        "param_count": 6291456,
+        "parent": "model.layers.0.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+      },
+      {
+        "name": "model.layers.0.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 0,
+        "shape": [
+          1024,
+          2048
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.0.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.0.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 0,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.0.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.0.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 0,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.0.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.0.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 0,
+        "shape": [
+          2048,
+          1024
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.0.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.0.input_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 0,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.0",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.0.pre_ff_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 0,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.0",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.1.feed_forward.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 1,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.1.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.1.feed_forward.up_proj",
+        "module_class": "Linear",
+        "layer_index": 1,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.1.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.1.feed_forward.down_proj",
+        "module_class": "Linear",
+        "layer_index": 1,
+        "shape": [
+          2048,
+          4608
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.1.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.1.mamba",
+        "module_class": "FalconH1Mixer",
+        "layer_index": 1,
+        "shape": null,
+        "param_count": 144,
+        "parent": "model.layers.1",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.1.mamba.conv1d",
+        "module_class": "Conv1d",
+        "layer_index": 1,
+        "shape": [
+          3584,
+          1,
+          4
+        ],
+        "param_count": 17920,
+        "parent": "model.layers.1.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+      },
+      {
+        "name": "model.layers.1.mamba.in_proj",
+        "module_class": "Linear",
+        "layer_index": 1,
+        "shape": [
+          6704,
+          2048
+        ],
+        "param_count": 13729792,
+        "parent": "model.layers.1.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.1.mamba.norm",
+        "module_class": "FalconH1RMSNormGated",
+        "layer_index": 1,
+        "shape": [
+          3072
+        ],
+        "param_count": 3072,
+        "parent": "model.layers.1.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.1.mamba.out_proj",
+        "module_class": "Linear",
+        "layer_index": 1,
+        "shape": [
+          2048,
+          3072
+        ],
+        "param_count": 6291456,
+        "parent": "model.layers.1.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+      },
+      {
+        "name": "model.layers.1.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 1,
+        "shape": [
+          1024,
+          2048
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.1.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.1.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 1,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.1.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.1.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 1,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.1.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.1.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 1,
+        "shape": [
+          2048,
+          1024
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.1.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.1.input_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 1,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.1",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.1.pre_ff_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 1,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.1",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.2.feed_forward.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 2,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.2.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.2.feed_forward.up_proj",
+        "module_class": "Linear",
+        "layer_index": 2,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.2.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.2.feed_forward.down_proj",
+        "module_class": "Linear",
+        "layer_index": 2,
+        "shape": [
+          2048,
+          4608
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.2.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.2.mamba",
+        "module_class": "FalconH1Mixer",
+        "layer_index": 2,
+        "shape": null,
+        "param_count": 144,
+        "parent": "model.layers.2",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.2.mamba.conv1d",
+        "module_class": "Conv1d",
+        "layer_index": 2,
+        "shape": [
+          3584,
+          1,
+          4
+        ],
+        "param_count": 17920,
+        "parent": "model.layers.2.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+      },
+      {
+        "name": "model.layers.2.mamba.in_proj",
+        "module_class": "Linear",
+        "layer_index": 2,
+        "shape": [
+          6704,
+          2048
+        ],
+        "param_count": 13729792,
+        "parent": "model.layers.2.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.2.mamba.norm",
+        "module_class": "FalconH1RMSNormGated",
+        "layer_index": 2,
+        "shape": [
+          3072
+        ],
+        "param_count": 3072,
+        "parent": "model.layers.2.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.2.mamba.out_proj",
+        "module_class": "Linear",
+        "layer_index": 2,
+        "shape": [
+          2048,
+          3072
+        ],
+        "param_count": 6291456,
+        "parent": "model.layers.2.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+      },
+      {
+        "name": "model.layers.2.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 2,
+        "shape": [
+          1024,
+          2048
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.2.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.2.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 2,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.2.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.2.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 2,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.2.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.2.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 2,
+        "shape": [
+          2048,
+          1024
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.2.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.2.input_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 2,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.2",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.2.pre_ff_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 2,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.2",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.3.feed_forward.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 3,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.3.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.3.feed_forward.up_proj",
+        "module_class": "Linear",
+        "layer_index": 3,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.3.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.3.feed_forward.down_proj",
+        "module_class": "Linear",
+        "layer_index": 3,
+        "shape": [
+          2048,
+          4608
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.3.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.3.mamba",
+        "module_class": "FalconH1Mixer",
+        "layer_index": 3,
+        "shape": null,
+        "param_count": 144,
+        "parent": "model.layers.3",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.3.mamba.conv1d",
+        "module_class": "Conv1d",
+        "layer_index": 3,
+        "shape": [
+          3584,
+          1,
+          4
+        ],
+        "param_count": 17920,
+        "parent": "model.layers.3.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+      },
+      {
+        "name": "model.layers.3.mamba.in_proj",
+        "module_class": "Linear",
+        "layer_index": 3,
+        "shape": [
+          6704,
+          2048
+        ],
+        "param_count": 13729792,
+        "parent": "model.layers.3.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.3.mamba.norm",
+        "module_class": "FalconH1RMSNormGated",
+        "layer_index": 3,
+        "shape": [
+          3072
+        ],
+        "param_count": 3072,
+        "parent": "model.layers.3.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.3.mamba.out_proj",
+        "module_class": "Linear",
+        "layer_index": 3,
+        "shape": [
+          2048,
+          3072
+        ],
+        "param_count": 6291456,
+        "parent": "model.layers.3.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+      },
+      {
+        "name": "model.layers.3.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 3,
+        "shape": [
+          1024,
+          2048
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.3.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.3.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 3,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.3.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.3.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 3,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.3.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.3.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 3,
+        "shape": [
+          2048,
+          1024
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.3.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.3.input_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 3,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.3",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.3.pre_ff_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 3,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.3",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.4.feed_forward.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 4,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.4.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.4.feed_forward.up_proj",
+        "module_class": "Linear",
+        "layer_index": 4,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.4.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.4.feed_forward.down_proj",
+        "module_class": "Linear",
+        "layer_index": 4,
+        "shape": [
+          2048,
+          4608
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.4.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.4.mamba",
+        "module_class": "FalconH1Mixer",
+        "layer_index": 4,
+        "shape": null,
+        "param_count": 144,
+        "parent": "model.layers.4",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.4.mamba.conv1d",
+        "module_class": "Conv1d",
+        "layer_index": 4,
+        "shape": [
+          3584,
+          1,
+          4
+        ],
+        "param_count": 17920,
+        "parent": "model.layers.4.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+      },
+      {
+        "name": "model.layers.4.mamba.in_proj",
+        "module_class": "Linear",
+        "layer_index": 4,
+        "shape": [
+          6704,
+          2048
+        ],
+        "param_count": 13729792,
+        "parent": "model.layers.4.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.4.mamba.norm",
+        "module_class": "FalconH1RMSNormGated",
+        "layer_index": 4,
+        "shape": [
+          3072
+        ],
+        "param_count": 3072,
+        "parent": "model.layers.4.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.4.mamba.out_proj",
+        "module_class": "Linear",
+        "layer_index": 4,
+        "shape": [
+          2048,
+          3072
+        ],
+        "param_count": 6291456,
+        "parent": "model.layers.4.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+      },
+      {
+        "name": "model.layers.4.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 4,
+        "shape": [
+          1024,
+          2048
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.4.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.4.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 4,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.4.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.4.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 4,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.4.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.4.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 4,
+        "shape": [
+          2048,
+          1024
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.4.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.4.input_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 4,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.4",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.4.pre_ff_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 4,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.4",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.5.feed_forward.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 5,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.5.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.5.feed_forward.up_proj",
+        "module_class": "Linear",
+        "layer_index": 5,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.5.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.5.feed_forward.down_proj",
+        "module_class": "Linear",
+        "layer_index": 5,
+        "shape": [
+          2048,
+          4608
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.5.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.5.mamba",
+        "module_class": "FalconH1Mixer",
+        "layer_index": 5,
+        "shape": null,
+        "param_count": 144,
+        "parent": "model.layers.5",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.5.mamba.conv1d",
+        "module_class": "Conv1d",
+        "layer_index": 5,
+        "shape": [
+          3584,
+          1,
+          4
+        ],
+        "param_count": 17920,
+        "parent": "model.layers.5.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+      },
+      {
+        "name": "model.layers.5.mamba.in_proj",
+        "module_class": "Linear",
+        "layer_index": 5,
+        "shape": [
+          6704,
+          2048
+        ],
+        "param_count": 13729792,
+        "parent": "model.layers.5.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.5.mamba.norm",
+        "module_class": "FalconH1RMSNormGated",
+        "layer_index": 5,
+        "shape": [
+          3072
+        ],
+        "param_count": 3072,
+        "parent": "model.layers.5.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.5.mamba.out_proj",
+        "module_class": "Linear",
+        "layer_index": 5,
+        "shape": [
+          2048,
+          3072
+        ],
+        "param_count": 6291456,
+        "parent": "model.layers.5.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+      },
+      {
+        "name": "model.layers.5.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 5,
+        "shape": [
+          1024,
+          2048
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.5.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.5.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 5,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.5.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.5.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 5,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.5.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.5.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 5,
+        "shape": [
+          2048,
+          1024
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.5.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.5.input_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 5,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.5",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.5.pre_ff_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 5,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.5",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.6.feed_forward.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 6,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.6.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.6.feed_forward.up_proj",
+        "module_class": "Linear",
+        "layer_index": 6,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.6.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.6.feed_forward.down_proj",
+        "module_class": "Linear",
+        "layer_index": 6,
+        "shape": [
+          2048,
+          4608
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.6.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.6.mamba",
+        "module_class": "FalconH1Mixer",
+        "layer_index": 6,
+        "shape": null,
+        "param_count": 144,
+        "parent": "model.layers.6",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.6.mamba.conv1d",
+        "module_class": "Conv1d",
+        "layer_index": 6,
+        "shape": [
+          3584,
+          1,
+          4
+        ],
+        "param_count": 17920,
+        "parent": "model.layers.6.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+      },
+      {
+        "name": "model.layers.6.mamba.in_proj",
+        "module_class": "Linear",
+        "layer_index": 6,
+        "shape": [
+          6704,
+          2048
+        ],
+        "param_count": 13729792,
+        "parent": "model.layers.6.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.6.mamba.norm",
+        "module_class": "FalconH1RMSNormGated",
+        "layer_index": 6,
+        "shape": [
+          3072
+        ],
+        "param_count": 3072,
+        "parent": "model.layers.6.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.6.mamba.out_proj",
+        "module_class": "Linear",
+        "layer_index": 6,
+        "shape": [
+          2048,
+          3072
+        ],
+        "param_count": 6291456,
+        "parent": "model.layers.6.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+      },
+      {
+        "name": "model.layers.6.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 6,
+        "shape": [
+          1024,
+          2048
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.6.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.6.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 6,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.6.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.6.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 6,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.6.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.6.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 6,
+        "shape": [
+          2048,
+          1024
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.6.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.6.input_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 6,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.6",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.6.pre_ff_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 6,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.6",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.7.feed_forward.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 7,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.7.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.7.feed_forward.up_proj",
+        "module_class": "Linear",
+        "layer_index": 7,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.7.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.7.feed_forward.down_proj",
+        "module_class": "Linear",
+        "layer_index": 7,
+        "shape": [
+          2048,
+          4608
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.7.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.7.mamba",
+        "module_class": "FalconH1Mixer",
+        "layer_index": 7,
+        "shape": null,
+        "param_count": 144,
+        "parent": "model.layers.7",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.7.mamba.conv1d",
+        "module_class": "Conv1d",
+        "layer_index": 7,
+        "shape": [
+          3584,
+          1,
+          4
+        ],
+        "param_count": 17920,
+        "parent": "model.layers.7.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+      },
+      {
+        "name": "model.layers.7.mamba.in_proj",
+        "module_class": "Linear",
+        "layer_index": 7,
+        "shape": [
+          6704,
+          2048
+        ],
+        "param_count": 13729792,
+        "parent": "model.layers.7.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.7.mamba.norm",
+        "module_class": "FalconH1RMSNormGated",
+        "layer_index": 7,
+        "shape": [
+          3072
+        ],
+        "param_count": 3072,
+        "parent": "model.layers.7.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.7.mamba.out_proj",
+        "module_class": "Linear",
+        "layer_index": 7,
+        "shape": [
+          2048,
+          3072
+        ],
+        "param_count": 6291456,
+        "parent": "model.layers.7.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+      },
+      {
+        "name": "model.layers.7.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 7,
+        "shape": [
+          1024,
+          2048
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.7.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.7.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 7,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.7.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.7.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 7,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.7.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.7.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 7,
+        "shape": [
+          2048,
+          1024
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.7.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.7.input_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 7,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.7",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.7.pre_ff_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 7,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.7",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.8.feed_forward.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 8,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.8.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.8.feed_forward.up_proj",
+        "module_class": "Linear",
+        "layer_index": 8,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.8.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.8.feed_forward.down_proj",
+        "module_class": "Linear",
+        "layer_index": 8,
+        "shape": [
+          2048,
+          4608
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.8.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.8.mamba",
+        "module_class": "FalconH1Mixer",
+        "layer_index": 8,
+        "shape": null,
+        "param_count": 144,
+        "parent": "model.layers.8",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.8.mamba.conv1d",
+        "module_class": "Conv1d",
+        "layer_index": 8,
+        "shape": [
+          3584,
+          1,
+          4
+        ],
+        "param_count": 17920,
+        "parent": "model.layers.8.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+      },
+      {
+        "name": "model.layers.8.mamba.in_proj",
+        "module_class": "Linear",
+        "layer_index": 8,
+        "shape": [
+          6704,
+          2048
+        ],
+        "param_count": 13729792,
+        "parent": "model.layers.8.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.8.mamba.norm",
+        "module_class": "FalconH1RMSNormGated",
+        "layer_index": 8,
+        "shape": [
+          3072
+        ],
+        "param_count": 3072,
+        "parent": "model.layers.8.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.8.mamba.out_proj",
+        "module_class": "Linear",
+        "layer_index": 8,
+        "shape": [
+          2048,
+          3072
+        ],
+        "param_count": 6291456,
+        "parent": "model.layers.8.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+      },
+      {
+        "name": "model.layers.8.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 8,
+        "shape": [
+          1024,
+          2048
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.8.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.8.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 8,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.8.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.8.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 8,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.8.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.8.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 8,
+        "shape": [
+          2048,
+          1024
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.8.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.8.input_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 8,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.8",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.8.pre_ff_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 8,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.8",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.9.feed_forward.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 9,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.9.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.9.feed_forward.up_proj",
+        "module_class": "Linear",
+        "layer_index": 9,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.9.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.9.feed_forward.down_proj",
+        "module_class": "Linear",
+        "layer_index": 9,
+        "shape": [
+          2048,
+          4608
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.9.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.9.mamba",
+        "module_class": "FalconH1Mixer",
+        "layer_index": 9,
+        "shape": null,
+        "param_count": 144,
+        "parent": "model.layers.9",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.9.mamba.conv1d",
+        "module_class": "Conv1d",
+        "layer_index": 9,
+        "shape": [
+          3584,
+          1,
+          4
+        ],
+        "param_count": 17920,
+        "parent": "model.layers.9.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+      },
+      {
+        "name": "model.layers.9.mamba.in_proj",
+        "module_class": "Linear",
+        "layer_index": 9,
+        "shape": [
+          6704,
+          2048
+        ],
+        "param_count": 13729792,
+        "parent": "model.layers.9.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.9.mamba.norm",
+        "module_class": "FalconH1RMSNormGated",
+        "layer_index": 9,
+        "shape": [
+          3072
+        ],
+        "param_count": 3072,
+        "parent": "model.layers.9.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.9.mamba.out_proj",
+        "module_class": "Linear",
+        "layer_index": 9,
+        "shape": [
+          2048,
+          3072
+        ],
+        "param_count": 6291456,
+        "parent": "model.layers.9.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+      },
+      {
+        "name": "model.layers.9.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 9,
+        "shape": [
+          1024,
+          2048
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.9.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.9.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 9,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.9.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.9.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 9,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.9.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.9.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 9,
+        "shape": [
+          2048,
+          1024
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.9.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.9.input_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 9,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.9",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.9.pre_ff_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 9,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.9",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.10.feed_forward.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 10,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.10.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.10.feed_forward.up_proj",
+        "module_class": "Linear",
+        "layer_index": 10,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.10.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.10.feed_forward.down_proj",
+        "module_class": "Linear",
+        "layer_index": 10,
+        "shape": [
+          2048,
+          4608
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.10.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.10.mamba",
+        "module_class": "FalconH1Mixer",
+        "layer_index": 10,
+        "shape": null,
+        "param_count": 144,
+        "parent": "model.layers.10",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.10.mamba.conv1d",
+        "module_class": "Conv1d",
+        "layer_index": 10,
+        "shape": [
+          3584,
+          1,
+          4
+        ],
+        "param_count": 17920,
+        "parent": "model.layers.10.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+      },
+      {
+        "name": "model.layers.10.mamba.in_proj",
+        "module_class": "Linear",
+        "layer_index": 10,
+        "shape": [
+          6704,
+          2048
+        ],
+        "param_count": 13729792,
+        "parent": "model.layers.10.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.10.mamba.norm",
+        "module_class": "FalconH1RMSNormGated",
+        "layer_index": 10,
+        "shape": [
+          3072
+        ],
+        "param_count": 3072,
+        "parent": "model.layers.10.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.10.mamba.out_proj",
+        "module_class": "Linear",
+        "layer_index": 10,
+        "shape": [
+          2048,
+          3072
+        ],
+        "param_count": 6291456,
+        "parent": "model.layers.10.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+      },
+      {
+        "name": "model.layers.10.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 10,
+        "shape": [
+          1024,
+          2048
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.10.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.10.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 10,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.10.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.10.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 10,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.10.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.10.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 10,
+        "shape": [
+          2048,
+          1024
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.10.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.10.input_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 10,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.10",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.10.pre_ff_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 10,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.10",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.11.feed_forward.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 11,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.11.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.11.feed_forward.up_proj",
+        "module_class": "Linear",
+        "layer_index": 11,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.11.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.11.feed_forward.down_proj",
+        "module_class": "Linear",
+        "layer_index": 11,
+        "shape": [
+          2048,
+          4608
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.11.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.11.mamba",
+        "module_class": "FalconH1Mixer",
+        "layer_index": 11,
+        "shape": null,
+        "param_count": 144,
+        "parent": "model.layers.11",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.11.mamba.conv1d",
+        "module_class": "Conv1d",
+        "layer_index": 11,
+        "shape": [
+          3584,
+          1,
+          4
+        ],
+        "param_count": 17920,
+        "parent": "model.layers.11.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+      },
+      {
+        "name": "model.layers.11.mamba.in_proj",
+        "module_class": "Linear",
+        "layer_index": 11,
+        "shape": [
+          6704,
+          2048
+        ],
+        "param_count": 13729792,
+        "parent": "model.layers.11.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.11.mamba.norm",
+        "module_class": "FalconH1RMSNormGated",
+        "layer_index": 11,
+        "shape": [
+          3072
+        ],
+        "param_count": 3072,
+        "parent": "model.layers.11.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.11.mamba.out_proj",
+        "module_class": "Linear",
+        "layer_index": 11,
+        "shape": [
+          2048,
+          3072
+        ],
+        "param_count": 6291456,
+        "parent": "model.layers.11.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+      },
+      {
+        "name": "model.layers.11.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 11,
+        "shape": [
+          1024,
+          2048
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.11.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.11.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 11,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.11.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.11.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 11,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.11.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.11.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 11,
+        "shape": [
+          2048,
+          1024
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.11.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.11.input_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 11,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.11",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.11.pre_ff_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 11,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.11",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.12.feed_forward.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 12,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.12.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.12.feed_forward.up_proj",
+        "module_class": "Linear",
+        "layer_index": 12,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.12.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.12.feed_forward.down_proj",
+        "module_class": "Linear",
+        "layer_index": 12,
+        "shape": [
+          2048,
+          4608
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.12.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.12.mamba",
+        "module_class": "FalconH1Mixer",
+        "layer_index": 12,
+        "shape": null,
+        "param_count": 144,
+        "parent": "model.layers.12",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.12.mamba.conv1d",
+        "module_class": "Conv1d",
+        "layer_index": 12,
+        "shape": [
+          3584,
+          1,
+          4
+        ],
+        "param_count": 17920,
+        "parent": "model.layers.12.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+      },
+      {
+        "name": "model.layers.12.mamba.in_proj",
+        "module_class": "Linear",
+        "layer_index": 12,
+        "shape": [
+          6704,
+          2048
+        ],
+        "param_count": 13729792,
+        "parent": "model.layers.12.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.12.mamba.norm",
+        "module_class": "FalconH1RMSNormGated",
+        "layer_index": 12,
+        "shape": [
+          3072
+        ],
+        "param_count": 3072,
+        "parent": "model.layers.12.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.12.mamba.out_proj",
+        "module_class": "Linear",
+        "layer_index": 12,
+        "shape": [
+          2048,
+          3072
+        ],
+        "param_count": 6291456,
+        "parent": "model.layers.12.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+      },
+      {
+        "name": "model.layers.12.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 12,
+        "shape": [
+          1024,
+          2048
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.12.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.12.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 12,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.12.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.12.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 12,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.12.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.12.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 12,
+        "shape": [
+          2048,
+          1024
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.12.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.12.input_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 12,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.12",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.12.pre_ff_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 12,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.12",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.13.feed_forward.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 13,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.13.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.13.feed_forward.up_proj",
+        "module_class": "Linear",
+        "layer_index": 13,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.13.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.13.feed_forward.down_proj",
+        "module_class": "Linear",
+        "layer_index": 13,
+        "shape": [
+          2048,
+          4608
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.13.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.13.mamba",
+        "module_class": "FalconH1Mixer",
+        "layer_index": 13,
+        "shape": null,
+        "param_count": 144,
+        "parent": "model.layers.13",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.13.mamba.conv1d",
+        "module_class": "Conv1d",
+        "layer_index": 13,
+        "shape": [
+          3584,
+          1,
+          4
+        ],
+        "param_count": 17920,
+        "parent": "model.layers.13.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+      },
+      {
+        "name": "model.layers.13.mamba.in_proj",
+        "module_class": "Linear",
+        "layer_index": 13,
+        "shape": [
+          6704,
+          2048
+        ],
+        "param_count": 13729792,
+        "parent": "model.layers.13.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.13.mamba.norm",
+        "module_class": "FalconH1RMSNormGated",
+        "layer_index": 13,
+        "shape": [
+          3072
+        ],
+        "param_count": 3072,
+        "parent": "model.layers.13.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.13.mamba.out_proj",
+        "module_class": "Linear",
+        "layer_index": 13,
+        "shape": [
+          2048,
+          3072
+        ],
+        "param_count": 6291456,
+        "parent": "model.layers.13.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+      },
+      {
+        "name": "model.layers.13.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 13,
+        "shape": [
+          1024,
+          2048
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.13.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.13.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 13,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.13.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.13.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 13,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.13.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.13.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 13,
+        "shape": [
+          2048,
+          1024
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.13.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.13.input_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 13,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.13",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.13.pre_ff_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 13,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.13",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.14.feed_forward.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 14,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.14.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.14.feed_forward.up_proj",
+        "module_class": "Linear",
+        "layer_index": 14,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.14.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.14.feed_forward.down_proj",
+        "module_class": "Linear",
+        "layer_index": 14,
+        "shape": [
+          2048,
+          4608
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.14.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.14.mamba",
+        "module_class": "FalconH1Mixer",
+        "layer_index": 14,
+        "shape": null,
+        "param_count": 144,
+        "parent": "model.layers.14",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.14.mamba.conv1d",
+        "module_class": "Conv1d",
+        "layer_index": 14,
+        "shape": [
+          3584,
+          1,
+          4
+        ],
+        "param_count": 17920,
+        "parent": "model.layers.14.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+      },
+      {
+        "name": "model.layers.14.mamba.in_proj",
+        "module_class": "Linear",
+        "layer_index": 14,
+        "shape": [
+          6704,
+          2048
+        ],
+        "param_count": 13729792,
+        "parent": "model.layers.14.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.14.mamba.norm",
+        "module_class": "FalconH1RMSNormGated",
+        "layer_index": 14,
+        "shape": [
+          3072
+        ],
+        "param_count": 3072,
+        "parent": "model.layers.14.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.14.mamba.out_proj",
+        "module_class": "Linear",
+        "layer_index": 14,
+        "shape": [
+          2048,
+          3072
+        ],
+        "param_count": 6291456,
+        "parent": "model.layers.14.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+      },
+      {
+        "name": "model.layers.14.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 14,
+        "shape": [
+          1024,
+          2048
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.14.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.14.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 14,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.14.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.14.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 14,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.14.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.14.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 14,
+        "shape": [
+          2048,
+          1024
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.14.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.14.input_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 14,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.14",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.14.pre_ff_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 14,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.14",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.15.feed_forward.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 15,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.15.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.15.feed_forward.up_proj",
+        "module_class": "Linear",
+        "layer_index": 15,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.15.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.15.feed_forward.down_proj",
+        "module_class": "Linear",
+        "layer_index": 15,
+        "shape": [
+          2048,
+          4608
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.15.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.15.mamba",
+        "module_class": "FalconH1Mixer",
+        "layer_index": 15,
+        "shape": null,
+        "param_count": 144,
+        "parent": "model.layers.15",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.15.mamba.conv1d",
+        "module_class": "Conv1d",
+        "layer_index": 15,
+        "shape": [
+          3584,
+          1,
+          4
+        ],
+        "param_count": 17920,
+        "parent": "model.layers.15.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+      },
+      {
+        "name": "model.layers.15.mamba.in_proj",
+        "module_class": "Linear",
+        "layer_index": 15,
+        "shape": [
+          6704,
+          2048
+        ],
+        "param_count": 13729792,
+        "parent": "model.layers.15.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.15.mamba.norm",
+        "module_class": "FalconH1RMSNormGated",
+        "layer_index": 15,
+        "shape": [
+          3072
+        ],
+        "param_count": 3072,
+        "parent": "model.layers.15.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.15.mamba.out_proj",
+        "module_class": "Linear",
+        "layer_index": 15,
+        "shape": [
+          2048,
+          3072
+        ],
+        "param_count": 6291456,
+        "parent": "model.layers.15.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+      },
+      {
+        "name": "model.layers.15.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 15,
+        "shape": [
+          1024,
+          2048
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.15.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.15.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 15,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.15.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.15.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 15,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.15.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.15.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 15,
+        "shape": [
+          2048,
+          1024
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.15.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.15.input_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 15,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.15",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.15.pre_ff_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 15,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.15",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.16.feed_forward.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 16,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.16.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.16.feed_forward.up_proj",
+        "module_class": "Linear",
+        "layer_index": 16,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.16.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.16.feed_forward.down_proj",
+        "module_class": "Linear",
+        "layer_index": 16,
+        "shape": [
+          2048,
+          4608
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.16.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.16.mamba",
+        "module_class": "FalconH1Mixer",
+        "layer_index": 16,
+        "shape": null,
+        "param_count": 144,
+        "parent": "model.layers.16",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.16.mamba.conv1d",
+        "module_class": "Conv1d",
+        "layer_index": 16,
+        "shape": [
+          3584,
+          1,
+          4
+        ],
+        "param_count": 17920,
+        "parent": "model.layers.16.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+      },
+      {
+        "name": "model.layers.16.mamba.in_proj",
+        "module_class": "Linear",
+        "layer_index": 16,
+        "shape": [
+          6704,
+          2048
+        ],
+        "param_count": 13729792,
+        "parent": "model.layers.16.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.16.mamba.norm",
+        "module_class": "FalconH1RMSNormGated",
+        "layer_index": 16,
+        "shape": [
+          3072
+        ],
+        "param_count": 3072,
+        "parent": "model.layers.16.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.16.mamba.out_proj",
+        "module_class": "Linear",
+        "layer_index": 16,
+        "shape": [
+          2048,
+          3072
+        ],
+        "param_count": 6291456,
+        "parent": "model.layers.16.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+      },
+      {
+        "name": "model.layers.16.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 16,
+        "shape": [
+          1024,
+          2048
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.16.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.16.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 16,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.16.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.16.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 16,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.16.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.16.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 16,
+        "shape": [
+          2048,
+          1024
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.16.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.16.input_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 16,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.16",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.16.pre_ff_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 16,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.16",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.17.feed_forward.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 17,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.17.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.17.feed_forward.up_proj",
+        "module_class": "Linear",
+        "layer_index": 17,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.17.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.17.feed_forward.down_proj",
+        "module_class": "Linear",
+        "layer_index": 17,
+        "shape": [
+          2048,
+          4608
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.17.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.17.mamba",
+        "module_class": "FalconH1Mixer",
+        "layer_index": 17,
+        "shape": null,
+        "param_count": 144,
+        "parent": "model.layers.17",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.17.mamba.conv1d",
+        "module_class": "Conv1d",
+        "layer_index": 17,
+        "shape": [
+          3584,
+          1,
+          4
+        ],
+        "param_count": 17920,
+        "parent": "model.layers.17.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+      },
+      {
+        "name": "model.layers.17.mamba.in_proj",
+        "module_class": "Linear",
+        "layer_index": 17,
+        "shape": [
+          6704,
+          2048
+        ],
+        "param_count": 13729792,
+        "parent": "model.layers.17.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.17.mamba.norm",
+        "module_class": "FalconH1RMSNormGated",
+        "layer_index": 17,
+        "shape": [
+          3072
+        ],
+        "param_count": 3072,
+        "parent": "model.layers.17.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.17.mamba.out_proj",
+        "module_class": "Linear",
+        "layer_index": 17,
+        "shape": [
+          2048,
+          3072
+        ],
+        "param_count": 6291456,
+        "parent": "model.layers.17.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+      },
+      {
+        "name": "model.layers.17.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 17,
+        "shape": [
+          1024,
+          2048
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.17.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.17.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 17,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.17.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.17.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 17,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.17.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.17.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 17,
+        "shape": [
+          2048,
+          1024
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.17.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.17.input_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 17,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.17",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.17.pre_ff_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 17,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.17",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.18.feed_forward.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 18,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.18.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.18.feed_forward.up_proj",
+        "module_class": "Linear",
+        "layer_index": 18,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.18.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.18.feed_forward.down_proj",
+        "module_class": "Linear",
+        "layer_index": 18,
+        "shape": [
+          2048,
+          4608
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.18.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.18.mamba",
+        "module_class": "FalconH1Mixer",
+        "layer_index": 18,
+        "shape": null,
+        "param_count": 144,
+        "parent": "model.layers.18",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.18.mamba.conv1d",
+        "module_class": "Conv1d",
+        "layer_index": 18,
+        "shape": [
+          3584,
+          1,
+          4
+        ],
+        "param_count": 17920,
+        "parent": "model.layers.18.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+      },
+      {
+        "name": "model.layers.18.mamba.in_proj",
+        "module_class": "Linear",
+        "layer_index": 18,
+        "shape": [
+          6704,
+          2048
+        ],
+        "param_count": 13729792,
+        "parent": "model.layers.18.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.18.mamba.norm",
+        "module_class": "FalconH1RMSNormGated",
+        "layer_index": 18,
+        "shape": [
+          3072
+        ],
+        "param_count": 3072,
+        "parent": "model.layers.18.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.18.mamba.out_proj",
+        "module_class": "Linear",
+        "layer_index": 18,
+        "shape": [
+          2048,
+          3072
+        ],
+        "param_count": 6291456,
+        "parent": "model.layers.18.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+      },
+      {
+        "name": "model.layers.18.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 18,
+        "shape": [
+          1024,
+          2048
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.18.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.18.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 18,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.18.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.18.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 18,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.18.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.18.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 18,
+        "shape": [
+          2048,
+          1024
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.18.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.18.input_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 18,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.18",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.18.pre_ff_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 18,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.18",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.19.feed_forward.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 19,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.19.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.19.feed_forward.up_proj",
+        "module_class": "Linear",
+        "layer_index": 19,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.19.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.19.feed_forward.down_proj",
+        "module_class": "Linear",
+        "layer_index": 19,
+        "shape": [
+          2048,
+          4608
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.19.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.19.mamba",
+        "module_class": "FalconH1Mixer",
+        "layer_index": 19,
+        "shape": null,
+        "param_count": 144,
+        "parent": "model.layers.19",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.19.mamba.conv1d",
+        "module_class": "Conv1d",
+        "layer_index": 19,
+        "shape": [
+          3584,
+          1,
+          4
+        ],
+        "param_count": 17920,
+        "parent": "model.layers.19.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+      },
+      {
+        "name": "model.layers.19.mamba.in_proj",
+        "module_class": "Linear",
+        "layer_index": 19,
+        "shape": [
+          6704,
+          2048
+        ],
+        "param_count": 13729792,
+        "parent": "model.layers.19.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.19.mamba.norm",
+        "module_class": "FalconH1RMSNormGated",
+        "layer_index": 19,
+        "shape": [
+          3072
+        ],
+        "param_count": 3072,
+        "parent": "model.layers.19.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.19.mamba.out_proj",
+        "module_class": "Linear",
+        "layer_index": 19,
+        "shape": [
+          2048,
+          3072
+        ],
+        "param_count": 6291456,
+        "parent": "model.layers.19.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+      },
+      {
+        "name": "model.layers.19.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 19,
+        "shape": [
+          1024,
+          2048
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.19.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.19.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 19,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.19.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.19.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 19,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.19.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.19.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 19,
+        "shape": [
+          2048,
+          1024
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.19.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.19.input_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 19,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.19",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.19.pre_ff_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 19,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.19",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.20.feed_forward.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 20,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.20.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.20.feed_forward.up_proj",
+        "module_class": "Linear",
+        "layer_index": 20,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.20.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.20.feed_forward.down_proj",
+        "module_class": "Linear",
+        "layer_index": 20,
+        "shape": [
+          2048,
+          4608
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.20.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.20.mamba",
+        "module_class": "FalconH1Mixer",
+        "layer_index": 20,
+        "shape": null,
+        "param_count": 144,
+        "parent": "model.layers.20",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.20.mamba.conv1d",
+        "module_class": "Conv1d",
+        "layer_index": 20,
+        "shape": [
+          3584,
+          1,
+          4
+        ],
+        "param_count": 17920,
+        "parent": "model.layers.20.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+      },
+      {
+        "name": "model.layers.20.mamba.in_proj",
+        "module_class": "Linear",
+        "layer_index": 20,
+        "shape": [
+          6704,
+          2048
+        ],
+        "param_count": 13729792,
+        "parent": "model.layers.20.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.20.mamba.norm",
+        "module_class": "FalconH1RMSNormGated",
+        "layer_index": 20,
+        "shape": [
+          3072
+        ],
+        "param_count": 3072,
+        "parent": "model.layers.20.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.20.mamba.out_proj",
+        "module_class": "Linear",
+        "layer_index": 20,
+        "shape": [
+          2048,
+          3072
+        ],
+        "param_count": 6291456,
+        "parent": "model.layers.20.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+      },
+      {
+        "name": "model.layers.20.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 20,
+        "shape": [
+          1024,
+          2048
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.20.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.20.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 20,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.20.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.20.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 20,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.20.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.20.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 20,
+        "shape": [
+          2048,
+          1024
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.20.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.20.input_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 20,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.20",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.20.pre_ff_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 20,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.20",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.21.feed_forward.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 21,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.21.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.21.feed_forward.up_proj",
+        "module_class": "Linear",
+        "layer_index": 21,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.21.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.21.feed_forward.down_proj",
+        "module_class": "Linear",
+        "layer_index": 21,
+        "shape": [
+          2048,
+          4608
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.21.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.21.mamba",
+        "module_class": "FalconH1Mixer",
+        "layer_index": 21,
+        "shape": null,
+        "param_count": 144,
+        "parent": "model.layers.21",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.21.mamba.conv1d",
+        "module_class": "Conv1d",
+        "layer_index": 21,
+        "shape": [
+          3584,
+          1,
+          4
+        ],
+        "param_count": 17920,
+        "parent": "model.layers.21.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+      },
+      {
+        "name": "model.layers.21.mamba.in_proj",
+        "module_class": "Linear",
+        "layer_index": 21,
+        "shape": [
+          6704,
+          2048
+        ],
+        "param_count": 13729792,
+        "parent": "model.layers.21.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.21.mamba.norm",
+        "module_class": "FalconH1RMSNormGated",
+        "layer_index": 21,
+        "shape": [
+          3072
+        ],
+        "param_count": 3072,
+        "parent": "model.layers.21.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.21.mamba.out_proj",
+        "module_class": "Linear",
+        "layer_index": 21,
+        "shape": [
+          2048,
+          3072
+        ],
+        "param_count": 6291456,
+        "parent": "model.layers.21.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+      },
+      {
+        "name": "model.layers.21.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 21,
+        "shape": [
+          1024,
+          2048
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.21.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.21.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 21,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.21.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.21.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 21,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.21.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.21.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 21,
+        "shape": [
+          2048,
+          1024
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.21.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.21.input_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 21,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.21",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.21.pre_ff_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 21,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.21",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.22.feed_forward.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 22,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.22.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.22.feed_forward.up_proj",
+        "module_class": "Linear",
+        "layer_index": 22,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.22.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.22.feed_forward.down_proj",
+        "module_class": "Linear",
+        "layer_index": 22,
+        "shape": [
+          2048,
+          4608
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.22.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.22.mamba",
+        "module_class": "FalconH1Mixer",
+        "layer_index": 22,
+        "shape": null,
+        "param_count": 144,
+        "parent": "model.layers.22",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.22.mamba.conv1d",
+        "module_class": "Conv1d",
+        "layer_index": 22,
+        "shape": [
+          3584,
+          1,
+          4
+        ],
+        "param_count": 17920,
+        "parent": "model.layers.22.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+      },
+      {
+        "name": "model.layers.22.mamba.in_proj",
+        "module_class": "Linear",
+        "layer_index": 22,
+        "shape": [
+          6704,
+          2048
+        ],
+        "param_count": 13729792,
+        "parent": "model.layers.22.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.22.mamba.norm",
+        "module_class": "FalconH1RMSNormGated",
+        "layer_index": 22,
+        "shape": [
+          3072
+        ],
+        "param_count": 3072,
+        "parent": "model.layers.22.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.22.mamba.out_proj",
+        "module_class": "Linear",
+        "layer_index": 22,
+        "shape": [
+          2048,
+          3072
+        ],
+        "param_count": 6291456,
+        "parent": "model.layers.22.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+      },
+      {
+        "name": "model.layers.22.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 22,
+        "shape": [
+          1024,
+          2048
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.22.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.22.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 22,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.22.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.22.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 22,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.22.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.22.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 22,
+        "shape": [
+          2048,
+          1024
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.22.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.22.input_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 22,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.22",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.22.pre_ff_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 22,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.22",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.23.feed_forward.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 23,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.23.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.23.feed_forward.up_proj",
+        "module_class": "Linear",
+        "layer_index": 23,
+        "shape": [
+          4608,
+          2048
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.23.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.23.feed_forward.down_proj",
+        "module_class": "Linear",
+        "layer_index": 23,
+        "shape": [
+          2048,
+          4608
+        ],
+        "param_count": 9437184,
+        "parent": "model.layers.23.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.23.mamba",
+        "module_class": "FalconH1Mixer",
+        "layer_index": 23,
+        "shape": null,
+        "param_count": 144,
+        "parent": "model.layers.23",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.23.mamba.conv1d",
+        "module_class": "Conv1d",
+        "layer_index": 23,
+        "shape": [
+          3584,
+          1,
+          4
+        ],
+        "param_count": 17920,
+        "parent": "model.layers.23.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Feeds a custom autograd Mamba kernel that bypasses the LoRA forward pass; adapter is silently inert. Borobia et al. (arXiv:2604.22127) Sec. 3.2 exclude it after observing training instability."
+      },
+      {
+        "name": "model.layers.23.mamba.in_proj",
+        "module_class": "Linear",
+        "layer_index": 23,
+        "shape": [
+          6704,
+          2048
+        ],
+        "param_count": 13729792,
+        "parent": "model.layers.23.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.23.mamba.norm",
+        "module_class": "FalconH1RMSNormGated",
+        "layer_index": 23,
+        "shape": [
+          3072
+        ],
+        "param_count": 3072,
+        "parent": "model.layers.23.mamba",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "valid_with_special_handler",
+        "validity_reason": "Recurrent-path tensor; requires backend-specific handling. Verify gradient flow with tests/test_gradient_reaches_adapter.py before trusting."
+      },
+      {
+        "name": "model.layers.23.mamba.out_proj",
+        "module_class": "Linear",
+        "layer_index": 23,
+        "shape": [
+          2048,
+          3072
+        ],
+        "param_count": 6291456,
+        "parent": "model.layers.23.mamba",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."
+      },
+      {
+        "name": "model.layers.23.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 23,
+        "shape": [
+          1024,
+          2048
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.23.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.23.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 23,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.23.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.23.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 23,
+        "shape": [
+          256,
+          2048
+        ],
+        "param_count": 524288,
+        "parent": "model.layers.23.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.23.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 23,
+        "shape": [
+          2048,
+          1024
+        ],
+        "param_count": 2097152,
+        "parent": "model.layers.23.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.23.input_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 23,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.23",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.23.pre_ff_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": 23,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.23",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.final_layernorm",
+        "module_class": "FalconH1RMSNorm",
+        "layer_index": null,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "lm_head",
+        "module_class": "Linear",
+        "layer_index": null,
+        "shape": [
+          65537,
+          2048
+        ],
+        "param_count": 134219776,
+        "parent": null,
+        "is_linear": true,
+        "component_type": "other",
+        "validity": "excluded",
+        "validity_reason": "Language model head; excluded by convention."
+      }
+    ]
+  },
+  "status": "PASS"
+}

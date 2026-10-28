@@ -1,0 +1,187 @@
+{
+  "schema_version": "1.0",
+  "run_id": "9ecc9bf0-77ef-4d26-88da-91186ab9b1ee",
+  "timestamp_utc": "2026-09-17T16:16:35.182677+00:00",
+  "script": "probe_tool_calls.py",
+  "model": {
+    "id": "tiiuae/Falcon-H1-1.5B-Instruct",
+    "revision": "80ebc50d7799a440b96c93bb6686a3924a09b0cb",
+    "precision": "bf16",
+    "quantisation": "none"
+  },
+  "statistics": {
+    "total_prompts": 10,
+    "parseable_output_count": 10,
+    "tool_called_count": 7,
+    "no_tool_cases_total": 5,
+    "no_tool_pure_total": 3,
+    "correct_abstain_total": 2,
+    "parseable_ratio": 1.0
+  },
+  "prompts_evaluation": [
+    {
+      "prompt_id": "T01_obvious_weather",
+      "category": "obvious_single_tool",
+      "user_query": "What is the current weather in Tokyo in celsius right now?",
+      "should_call_tool": true,
+      "expected_tool": "get_weather",
+      "raw_output": "{\"name\": \"get_weather\", \"arguments\": {\"city\": \"Tokyo\", \"unit\": \"celsius\"}}",
+      "is_parseable": true,
+      "called_tool": true,
+      "detected_tool_name": "get_weather",
+      "detected_arguments": {
+        "city": "Tokyo",
+        "unit": "celsius"
+      },
+      "detected_format": "json",
+      "abstained": false
+    },
+    {
+      "prompt_id": "T02_obvious_calc",
+      "category": "obvious_single_tool",
+      "user_query": "Calculate the total cost for 5 units at a price of 19.99 each.",
+      "should_call_tool": true,
+      "expected_tool": "calculate_total",
+      "raw_output": "{\"name\": \"calculate_total\", \"arguments\": {\"quantity\": 5, \"unit_price\": 19.99}}",
+      "is_parseable": true,
+      "called_tool": true,
+      "detected_tool_name": "calculate_total",
+      "detected_arguments": {
+        "quantity": 5,
+        "unit_price": 19.99
+      },
+      "detected_format": "json",
+      "abstained": false
+    },
+    {
+      "prompt_id": "T03_obvious_docs",
+      "category": "obvious_single_tool",
+      "user_query": "Search our internal documentation for customer return policy.",
+      "should_call_tool": true,
+      "expected_tool": "search_docs",
+      "raw_output": "{\"name\": \"search_docs\", \"arguments\": {\"query\": \"customer return policy\"}}",
+      "is_parseable": true,
+      "called_tool": true,
+      "detected_tool_name": "search_docs",
+      "detected_arguments": {
+        "query": "customer return policy"
+      },
+      "detected_format": "json",
+      "abstained": false
+    },
+    {
+      "prompt_id": "T04_plausible_travel",
+      "category": "multi_plausible_tools",
+      "user_query": "I need to travel to Paris next Monday 2026-09-21. Find flights and book a hotel for me.",
+      "should_call_tool": true,
+      "expected_tool": "search_flights_or_book_hotel",
+      "raw_output": "```json\n{\n  \"name\": \"search_flights\",\n  \"arguments\": {\n    \"destination\": \"Paris\",\n    \"date\": \"2026-09-21\"\n  }\n}\n```",
+      "is_parseable": true,
+      "called_tool": true,
+      "detected_tool_name": "search_flights",
+      "detected_arguments": {
+        "destination": "Paris",
+        "date": "2026-09-21"
+      },
+      "detected_format": "json",
+      "abstained": false
+    },
+    {
+      "prompt_id": "T05_plausible_network",
+      "category": "multi_plausible_tools",
+      "user_query": "My connection to example.com is slow. Test the host latency and resolve its DNS.",
+      "should_call_tool": true,
+      "expected_tool": "ping_or_dns",
+      "raw_output": "{\"name\": \"ping_host\", \"arguments\": {\"host\": \"example.com\"}}\n\nTo test the host latency and resolve its DNS, you should also perform a DNS lookup. Here's the JSON for that:\n\n{\"name\": \"dns_lookup\", \"arguments\": {\"domain\": \"example.com\"}}\n\nHowever, since you've already requested to test the host latency with the `ping_host` tool, I'll proceed with that first. If you need the DNS resolution as well, you can follow up with the `dns_lookup` tool.",
+      "is_parseable": true,
+      "called_tool": false,
+      "detected_tool_name": null,
+      "detected_arguments": null,
+      "detected_format": "plain_text",
+      "abstained": true
+    },
+    {
+      "prompt_id": "T06_missing_args_transfer",
+      "category": "missing_required_args",
+      "user_query": "Please initiate a wire money transfer right away.",
+      "should_call_tool": false,
+      "expected_tool": null,
+      "raw_output": "{\"name\": \"transfer_funds\", \"arguments\": {\"recipient\": \"recipient@example.com\", \"amount\": \"500.00\", \"currency\": \"USD\"}}",
+      "is_parseable": true,
+      "called_tool": true,
+      "detected_tool_name": "transfer_funds",
+      "detected_arguments": {
+        "recipient": "recipient@example.com",
+        "amount": "500.00",
+        "currency": "USD"
+      },
+      "detected_format": "json",
+      "abstained": false
+    },
+    {
+      "prompt_id": "T07_missing_args_deploy",
+      "category": "missing_required_args",
+      "user_query": "Deploy the latest build immediately.",
+      "should_call_tool": false,
+      "expected_tool": null,
+      "raw_output": "{\"name\": \"deploy_build\", \"arguments\": {\"version\": \"main\", \"environment\": \"production\"}}",
+      "is_parseable": true,
+      "called_tool": true,
+      "detected_tool_name": "deploy_build",
+      "detected_arguments": {
+        "version": "main",
+        "environment": "production"
+      },
+      "detected_format": "json",
+      "abstained": false
+    },
+    {
+      "prompt_id": "T08_notool_mutex",
+      "category": "no_tool_needed",
+      "user_query": "Explain the theoretical difference between a mutex and a binary semaphore in operating systems.",
+      "should_call_tool": false,
+      "expected_tool": null,
+      "raw_output": "A mutex (mutual exclusion object) and a binary semaphore are both synchronization primitives used in operating systems to control access to shared resources, but they have fundamental differences in their design and usage.\n\n### Mutex:\n\n1. **Ownership**: A mutex has an owner. Only the thread that owns the mutex can release it. This concept is known as \"exclusive ownership.\"\n\n2. **Counting**: A mutex typically uses a counting mechanism (often initialized to 1) to track the number of threads currently holding the lock. When a thread acquires the mutex, it increments the count, and when it releases, it decrements the count.",
+      "is_parseable": true,
+      "called_tool": false,
+      "detected_tool_name": null,
+      "detected_arguments": null,
+      "detected_format": "plain_text",
+      "abstained": true
+    },
+    {
+      "prompt_id": "T09_notool_haiku",
+      "category": "no_tool_needed",
+      "user_query": "Write a three-line haiku about golden autumn leaves falling from trees.",
+      "should_call_tool": false,
+      "expected_tool": null,
+      "raw_output": "Golden hues descend,  \nWhispering winds carry fall,  \nNature's soft embrace.",
+      "is_parseable": true,
+      "called_tool": false,
+      "detected_tool_name": null,
+      "detected_arguments": null,
+      "detected_format": "plain_text",
+      "abstained": true
+    },
+    {
+      "prompt_id": "T10_notool_capital",
+      "category": "no_tool_needed",
+      "user_query": "What is the capital city of Australia?",
+      "should_call_tool": false,
+      "expected_tool": null,
+      "raw_output": "{\"name\": \"get_weather\", \"arguments\": {\"city\": \"Australia\", \"unit\": \"celsius\"}}",
+      "is_parseable": true,
+      "called_tool": true,
+      "detected_tool_name": "get_weather",
+      "detected_arguments": {
+        "city": "Australia",
+        "unit": "celsius"
+      },
+      "detected_format": "json",
+      "abstained": false
+    }
+  ],
+  "status": "PASS",
+  "failures": [],
+  "not_determined": []
+}

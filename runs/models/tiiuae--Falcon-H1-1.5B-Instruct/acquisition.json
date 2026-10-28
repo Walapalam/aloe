@@ -1,0 +1,154 @@
+{
+  "schema_version": "1.0",
+  "run_id": "0000d1d9-f2c8-416d-b767-380c0dd2dd00",
+  "timestamp_utc": "2026-09-17T13:19:53.661304+00:00",
+  "script": "download_models.py",
+  "model": {
+    "id": "tiiuae/Falcon-H1-1.5B-Instruct",
+    "revision": "80ebc50d7799a440b96c93bb6686a3924a09b0cb",
+    "precision": "bf16",
+    "quantisation": "none",
+    "local_snapshot_path": "/Users/walapalam/.cache/huggingface/hub/models--tiiuae--Falcon-H1-1.5B-Instruct/snapshots/80ebc50d7799a440b96c93bb6686a3924a09b0cb",
+    "total_size_bytes": 3114955068,
+    "total_size_gb": 2.901,
+    "files": [
+      {
+        "path": ".gitattributes",
+        "size_bytes": 1519,
+        "symlink": true
+      },
+      {
+        "path": "README.md",
+        "size_bytes": 7041,
+        "symlink": true
+      },
+      {
+        "path": "chat_template.jinja",
+        "size_bytes": 1151,
+        "symlink": true
+      },
+      {
+        "path": "config.json",
+        "size_bytes": 1599,
+        "symlink": true
+      },
+      {
+        "path": "generation_config.json",
+        "size_bytes": 145,
+        "symlink": true
+      },
+      {
+        "path": "model.safetensors",
+        "size_bytes": 3109773032,
+        "symlink": true
+      },
+      {
+        "path": "special_tokens_map.json",
+        "size_bytes": 7693,
+        "symlink": true
+      },
+      {
+        "path": "tokenizer.json",
+        "size_bytes": 5062983,
+        "symlink": true
+      },
+      {
+        "path": "tokenizer_config.json",
+        "size_bytes": 99905,
+        "symlink": true
+      }
+    ],
+    "license": "other",
+    "license_name": "falcon-llm-license",
+    "license_link": "https://falconllm.tii.ae/falcon-terms-and-conditions.html",
+    "gated": false,
+    "has_chat_template": true,
+    "chat_template": "{{bos_token}}\n{%- if tools %}\n    {{- '<|im_start|>system\\n' }}\n    {%- if messages[0].role == 'system' %}\n        {{- messages[0].content + '\\n\\n' }}\n    {%- endif %}\n    {{- \"You are a function calling AI model. You are provided with function signature within <tools> </tools> XML tags. You may call one or more functions to assist with the user query. Don't make assumptions about what values to plug into functions.\\n<tools>\\n\" }}\n    {%- for tool in tools %}[{{- tool | tojson }}]{%- endfor %}\n    {{- \"\\n</tools>\\nFor each function call, return a json object with function name and arguments within <tool_call> </tool_call> tags with the following schema:\\n<tool_call>\\n{'arguments': <args-dict>, 'name': <function-name>}\\n</tool_call>\\n\" }}\n{%- else %}\n    {%- if messages[0].role == 'system' %}\n        {{- '<|im_start|>system\\n' + messages[0].content + '<|im_end|>\\n' }}\n    {%- endif %}\n{%- endif %}{% for message in messages %}{%- if message.role != 'system' %}{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}{%- endif %}{% endfor %}{% if add_generation_prompt %}{{ '<|im_start|>assistant\n' }}{% endif %}",
+    "config": {
+      "transformers_version": "5.17.0",
+      "architectures": [
+        "FalconH1ForCausalLM"
+      ],
+      "output_hidden_states": false,
+      "return_dict": true,
+      "dtype": "bfloat16",
+      "chunk_size_feed_forward": 0,
+      "is_encoder_decoder": false,
+      "id2label": {
+        "0": "LABEL_0",
+        "1": "LABEL_1"
+      },
+      "label2id": {
+        "LABEL_0": 0,
+        "LABEL_1": 1
+      },
+      "problem_type": null,
+      "vocab_size": 65537,
+      "tie_word_embeddings": false,
+      "hidden_size": 2048,
+      "intermediate_size": 4608,
+      "num_hidden_layers": 24,
+      "num_attention_heads": 8,
+      "num_key_value_heads": 2,
+      "hidden_act": "silu",
+      "initializer_range": 0.02,
+      "rms_norm_eps": 1e-05,
+      "use_cache": true,
+      "num_logits_to_keep": 1,
+      "pad_token_id": 0,
+      "bos_token_id": 1,
+      "eos_token_id": 11,
+      "max_position_embeddings": 131072,
+      "attention_dropout": 0.0,
+      "mamba_d_ssm": 3072,
+      "mamba_n_heads": 48,
+      "mamba_d_head": 64,
+      "mamba_n_groups": 1,
+      "mamba_d_state": 256,
+      "mamba_d_conv": 4,
+      "mamba_expand": 2,
+      "mamba_chunk_size": 128,
+      "mamba_conv_bias": true,
+      "mamba_proj_bias": false,
+      "mamba_norm_before_gate": false,
+      "mamba_rms_norm": true,
+      "time_step_limit": [
+        0.0,
+        Infinity
+      ],
+      "projectors_bias": false,
+      "rope_parameters": {
+        "rope_theta": 100000000000.0,
+        "rope_type": "default"
+      },
+      "lm_head_multiplier": 0.01953125,
+      "embedding_multiplier": 5.656854249492381,
+      "mlp_multipliers": [
+        0.4419417382415922,
+        0.13020833333333331
+      ],
+      "key_multiplier": 0.06905339660024876,
+      "attention_out_multiplier": 0.234375,
+      "attention_in_multiplier": 1.0,
+      "ssm_multipliers": [
+        0.3535533905932738,
+        0.25,
+        0.1767766952966369,
+        0.5,
+        0.3535533905932738
+      ],
+      "ssm_in_multiplier": 0.625,
+      "ssm_out_multiplier": 0.11785113019775793,
+      "attention_bias": false,
+      "mlp_bias": false,
+      "_name_or_path": "/Users/walapalam/.cache/huggingface/hub/models--tiiuae--Falcon-H1-1.5B-Instruct/snapshots/80ebc50d7799a440b96c93bb6686a3924a09b0cb",
+      "attn_layer_indices": null,
+      "head_dim": 128,
+      "mamba_use_mlp": true,
+      "mlp_expansion_factor": 8,
+      "model_type": "falcon_h1",
+      "output_attentions": false
+    }
+  },
+  "status": "PASS"
+}

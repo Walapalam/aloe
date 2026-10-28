@@ -1,0 +1,78 @@
+{
+  "eval_card_version": "1.0",
+  "generated_at": "2026-10-12T09:33:18.940962+00:00",
+  "model": {
+    "model_id": "google/gemma-4-E2B-it",
+    "base_commit": "8472c58f78e6e3af6a44a2657bdcf2a4ef8b2740",
+    "parameters_total": 2500000000,
+    "trainable_parameters": 5505024,
+    "parameter_fraction": 0.0022020096
+  },
+  "search_point": {
+    "group_settings": {
+      "local_attention": {
+        "enabled": true,
+        "rank": 4,
+        "alpha": 16
+      },
+      "global_attention": {
+        "enabled": true,
+        "rank": 32,
+        "alpha": 128
+      },
+      "ffn": {
+        "enabled": false,
+        "rank": 0,
+        "alpha": 0
+      }
+    },
+    "grammar_sha256": null
+  },
+  "metrics": {
+    "tool_accuracy_mean": 0.7378,
+    "tool_accuracy_std": 0.012,
+    "ci_95_bootstrap": [
+      0.07467,
+      0.17333
+    ],
+    "p_value_vs_uniform": 0.0001,
+    "p_value_bonferroni": null,
+    "cohens_d": 0.312,
+    "peak_memory_rss_gb": 5.1568,
+    "memory_metric": "cuda_max_memory_allocated"
+  },
+  "optimizer": {
+    "impl": "mobo_botorch_matern52_qlognehvi",
+    "kernel": "ScaleKernel(MaternKernel(nu=2.5))",
+    "acquisition": "qLogNEHVI",
+    "ref_point": [
+      0.0,
+      -100000000.0,
+      -24000.0
+    ],
+    "n_init": 6,
+    "bo_seed": 42,
+    "botorch_version": null
+  },
+  "environment": {
+    "hardware_tier": "colab_a100_80gb",
+    "os": "Darwin 25.6.0",
+    "python_version": "3.12.14",
+    "backend": "peft_cuda",
+    "library_versions": {
+      "torch": "2.14.0",
+      "transformers": "5.17.0",
+      "peft": "0.21.0",
+      "datasets": "5.0.1",
+      "numpy": "2.5.3"
+    },
+    "seeds_evaluated": [
+      42,
+      137,
+      2026
+    ]
+  },
+  "baseline_trial_id": "uniform_lora_baseline_r8",
+  "dataset_manifest_sha256": null,
+  "eval_card_sha256": "e74f00796aa3e5a8e64d36e556bf3e30b4b24efa3bc6aff1f4ce6133ee8b8dfb"
+}

@@ -38,7 +38,7 @@ venv.bak/
 *.swo
 
 # Weights, Cache & Large Datasets
-models/
+/models/
 data/raw/
 *.bin
 *.safetensors
@@ -49,10 +49,11 @@ data/raw/
 *.zip
 *.parquet
 
-# Training & Run Artifacts (Scoped to avoid ignoring architecture/adapters)
+# Training & Run Artifacts (Scoped to ignore only heavy weight/adapter directories, keeping lightweight JSON/MD reports tracked)
 /runs/**/adapter/
 /runs/**/checkpoint-*/
-runs/
+/runs/smoke/
+/runs/trials/
 ruvector.db
 
 # Test & Coverage

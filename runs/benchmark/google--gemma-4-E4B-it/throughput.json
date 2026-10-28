@@ -1,0 +1,91 @@
+{
+  "schema_version": "1.0",
+  "run_id": "99d5c222-28ca-48cb-bb8a-9049f1028ebb",
+  "timestamp_utc": "2026-09-17T16:34:24.453083+00:00",
+  "script": "benchmark_throughput.py",
+  "model": {
+    "id": "google/gemma-4-E4B-it",
+    "revision": "ee0ef6023621cff504d758262d4e04895a5af4a2",
+    "precision": "bf16",
+    "quantisation": "none"
+  },
+  "hardware": {
+    "chip": "Apple M1 Max",
+    "memory_type": "unified",
+    "total_ram_gb": 64.0,
+    "device": "mps:0"
+  },
+  "results": {
+    "prefill_throughput": [
+      {
+        "prompt_length": 64,
+        "avg_latency_ms": 293.79,
+        "tokens_per_second": 217.8
+      },
+      {
+        "prompt_length": 256,
+        "avg_latency_ms": 855.91,
+        "tokens_per_second": 299.1
+      },
+      {
+        "prompt_length": 512,
+        "avg_latency_ms": 1810.03,
+        "tokens_per_second": 282.9
+      }
+    ],
+    "decode_throughput": [
+      {
+        "target_tokens": 32,
+        "actual_tokens": 32,
+        "e2e_time_ms": 1988.94,
+        "ttft_ms": 300.09,
+        "decode_tokens_per_sec": 18.4,
+        "e2e_tokens_per_sec": 16.1,
+        "ms_per_token": 54.48
+      },
+      {
+        "target_tokens": 64,
+        "actual_tokens": 64,
+        "e2e_time_ms": 4024.62,
+        "ttft_ms": 200.62,
+        "decode_tokens_per_sec": 16.5,
+        "e2e_tokens_per_sec": 15.9,
+        "ms_per_token": 60.7
+      },
+      {
+        "target_tokens": 128,
+        "actual_tokens": 128,
+        "e2e_time_ms": 7754.35,
+        "ttft_ms": 136.74,
+        "decode_tokens_per_sec": 16.7,
+        "e2e_tokens_per_sec": 16.5,
+        "ms_per_token": 59.98
+      },
+      {
+        "target_tokens": 256,
+        "actual_tokens": 256,
+        "e2e_time_ms": 15472.77,
+        "ttft_ms": 133.82,
+        "decode_tokens_per_sec": 16.6,
+        "e2e_tokens_per_sec": 16.5,
+        "ms_per_token": 60.15
+      }
+    ],
+    "training_throughput": {
+      "batch_size": 1,
+      "sequence_length": 128,
+      "avg_step_time_ms": 1371.62,
+      "steps_per_sec": 0.73,
+      "tokens_per_sec": 93.3
+    },
+    "memory_measurements": {
+      "inference_peak_rss_gb": 7.5319,
+      "inference_peak_mps_gb": 0.2774,
+      "training_peak_rss_gb": 7.5756,
+      "training_peak_mps_gb": 1.1904
+    }
+  },
+  "status": "PASS",
+  "failures": [],
+  "not_determined": []
+}

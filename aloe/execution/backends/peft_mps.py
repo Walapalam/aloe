@@ -41,6 +41,30 @@ from aloe.tracking.trial_store import (
 logger = logging.getLogger(__name__)
 
 
+def _ensure_peft_torchao_compat() -> None:
+    """Guard against Colab/system environments with incompatible preinstalled torchao (<0.16.0)."""
+    try:
+        import peft.import_utils as peft_import_utils
+        import peft.tuners.lora.torchao as peft_lora_torchao
+
+        orig_fn = getattr(peft_import_utils, "is_torchao_available", None)
+        if orig_fn is not None and not getattr(orig_fn, "_aloe_patched", False):
+            def _safe_is_torchao_available(*args: Any, **kwargs: Any) -> bool:
+                try:
+                    return bool(orig_fn(*args, **kwargs))
+                except ImportError:
+                    return False
+
+            _safe_is_torchao_available._aloe_patched = True  # type: ignore[attr-defined]
+            peft_import_utils.is_torchao_available = _safe_is_torchao_available
+            peft_lora_torchao.is_torchao_available = _safe_is_torchao_available
+    except Exception:
+        pass
+
+
+_ensure_peft_torchao_compat()
+
+
 def set_seed(seed: int = 42) -> None:
     """Set deterministic seeds across random, numpy, and torch accelerators."""
     random.seed(seed)

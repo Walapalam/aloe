@@ -66,7 +66,7 @@ def test_peft_mps_backend_availability() -> None:
     backend = PeftMPSBackend()
     avail = backend.available()
     assert isinstance(avail, bool)
-    assert avail is True  # Running on Apple Silicon M1 Max
+    assert avail is bool(hasattr(torch.backends, "mps") and torch.backends.mps.is_available())
 
 
 def test_peft_mps_backend_supports_validation() -> None:

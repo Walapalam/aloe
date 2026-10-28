@@ -1,0 +1,73 @@
+{
+  "eval_card_version": "1.0",
+  "generated_at": "2026-10-12T09:56:24.815082+00:00",
+  "model": {
+    "model_id": "google/gemma-4-E2B-it",
+    "base_commit": "f6beb4b56cc3a8de115519e2fa8087ac6c62f104",
+    "parameters_total": 5108188704,
+    "trainable_parameters": 3891200,
+    "parameter_fraction": 0.0007617572931385583
+  },
+  "search_point": {
+    "group_settings": {
+      "local_attention": {
+        "enabled": true,
+        "rank": 4,
+        "alpha": 16
+      },
+      "global_attention": {
+        "enabled": true,
+        "rank": 32,
+        "alpha": 128
+      },
+      "ffn": {
+        "enabled": false,
+        "rank": 4,
+        "alpha": 8
+      }
+    },
+    "grammar_sha256": "a6772c42397355153b6d05687bae16ebd543d915726b63158b399bebc90e3973"
+  },
+  "metrics": {
+    "tool_accuracy_mean": 0.3333333333333333,
+    "tool_accuracy_std": 0.0,
+    "ci_95_bootstrap": [
+      0.0,
+      0.0
+    ],
+    "p_value_vs_uniform": 1.0,
+    "p_value_bonferroni": 1.0,
+    "cohens_d": null,
+    "peak_memory_rss_gb": 18.8981,
+    "memory_metric": "smoke_mps_driver_allocated"
+  },
+  "optimizer": {
+    "impl": "fixed_config_empirical_pilot",
+    "kernel": null,
+    "acquisition": null,
+    "ref_point": null,
+    "n_init": null,
+    "bo_seed": null,
+    "botorch_version": null
+  },
+  "environment": {
+    "hardware_tier": "smoke_apple_silicon_mps",
+    "os": "Darwin 25.6.0",
+    "python_version": "3.12.14",
+    "backend": "peft_mps",
+    "library_versions": {
+      "torch": "2.14.0",
+      "transformers": "5.17.0",
+      "peft": "0.21.0",
+      "datasets": "5.0.1",
+      "numpy": "2.5.3"
+    },
+    "seeds_evaluated": [
+      42,
+      137
+    ]
+  },
+  "baseline_trial_id": "config_a_uniform_r8_s42",
+  "dataset_manifest_sha256": "8f2dff9a0c8867403fdd166998a387489cf583d8bbb6b0c8602f4b1047b950bd",
+  "eval_card_sha256": "6c43066b1da59f44cf96e5f9a174071a8e458d9bbbb171693473f765380bfb47"
+}
