@@ -1,0 +1,98 @@
+{
+  "schema_version": "1.0",
+  "timestamp_utc": "2026-10-28T14:07:33.332109+00:00",
+  "model_id": "LiquidAI/LFM3-1.7B",
+  "revision": "40ebe0aa6662c9d40389c2f5d565b6a2c6aebacd",
+  "device": "mps",
+  "hardware": "arm",
+  "full_weights_loaded": false,
+  "architecture": {
+    "family": "lfm3",
+    "topology": "sequential_hybrid",
+    "num_layers": 24,
+    "total_params": 1990945536,
+    "valid_targets_by_group": {
+      "ssm": 26,
+      "ffn": 72,
+      "global_attention": 24,
+      "local_attention": 20
+    },
+    "total_valid_targets": 142,
+    "excluded_count": 145,
+    "conv_excluded_count": 13,
+    "gate_excluded_count": 11,
+    "search_space_cardinality": 194480
+  },
+  "budget_parity": {
+    "P1_Uniform_r8_params": 8052736,
+    "P2_Global_Exact_Parity": {
+      "candidate_params": 8052736,
+      "baseline_params": 8052736,
+      "relative_delta": 0.0,
+      "relative_delta_pct": 0.0,
+      "tolerance": 0.05,
+      "within_budget": true
+    },
+    "P3_Operator_Prioritized": {
+      "candidate_params": 7700480,
+      "baseline_params": 8052736,
+      "relative_delta": -0.043744,
+      "relative_delta_pct": -4.37,
+      "tolerance": 0.05,
+      "within_budget": true
+    }
+  },
+  "gradient_verification": {
+    "components": {
+      "ssm": {
+        "target_module_count": 26,
+        "adapter_param_count": 52,
+        "gradient_ok_count": 52,
+        "gradient_missing_count": 0,
+        "min_gradient_norm": 6.088168621063232,
+        "max_gradient_norm": 1387.3233642578125,
+        "elapsed_ms": 2618.15,
+        "verdict": "PASS"
+      },
+      "ffn": {
+        "target_module_count": 72,
+        "adapter_param_count": 144,
+        "gradient_ok_count": 144,
+        "gradient_missing_count": 0,
+        "min_gradient_norm": 6.2748894691467285,
+        "max_gradient_norm": 896.4400634765625,
+        "elapsed_ms": 554.29,
+        "verdict": "PASS"
+      },
+      "global_attention": {
+        "target_module_count": 24,
+        "adapter_param_count": 48,
+        "gradient_ok_count": 48,
+        "gradient_missing_count": 0,
+        "min_gradient_norm": 0.9259787797927856,
+        "max_gradient_norm": 382.8105773925781,
+        "elapsed_ms": 166.24,
+        "verdict": "PASS"
+      },
+      "local_attention": {
+        "target_module_count": 20,
+        "adapter_param_count": 40,
+        "gradient_ok_count": 40,
+        "gradient_missing_count": 0,
+        "min_gradient_norm": 1.5350896120071411,
+        "max_gradient_norm": 238.50721740722656,
+        "elapsed_ms": 415.69,
+        "verdict": "PASS"
+      }
+    },
+    "negative_control_conv_conv": {
+      "target_module_count": 13,
+      "adapter_param_count": 26,
+      "gradient_ok_count": 0,
+      "gradient_missing_count": 26,
+      "verdict": "CONFIRMED_INERT"
+    }
+  },
+  "total_elapsed_sec": 7.655,
+  "status": "PASS"
+}

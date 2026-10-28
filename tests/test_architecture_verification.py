@@ -9,6 +9,7 @@ import pytest
 
 from aloe.architecture.adapters.falcon_h1 import FalconH1Adapter
 from aloe.architecture.adapters.gemma4 import Gemma4Adapter
+from aloe.architecture.adapters.lfm3 import Lfm3Adapter
 from aloe.architecture.constraints import apply_validity
 from aloe.architecture.inspector import inspect_model
 from aloe.architecture.schema import ArchitectureDescription, ComponentType, ModuleRecord, Validity
@@ -262,3 +263,60 @@ def test_gate_3_claims_artifacts_on_disk() -> None:
     assert data_b["schema_version"] == "1.0"
     assert data_b["gate_3"]["status"] == "PASS"
     assert all(c["status"] == "PASS" for c in data_b["claims"])
+
+
+def test_lfm3_adapter_classification_and_exclusions() -> None:
+    adapter = Lfm3Adapter()
+    config = DummyConfig(
+        model_type="lfm3",
+        layer_types=["conv", "sliding_attention", "full_attention"],
+    )
+    assert adapter.matches("LiquidAI/LFM3-1.7B", config)
+    assert adapter.layer_type(0, config) == "conv"
+    assert adapter.layer_type(1, config) == "sliding_attention"
+    assert adapter.layer_type(2, config) == "full_attention"
+
+    with pytest.raises(KeyError, match="LFM3 config required"):
+        Lfm3Adapter().layer_type(0, config=None)
+
+    with pytest.raises(KeyError, match="missing 'layer_types'"):
+        adapter.layer_type(0, config=DummyConfig())
+
+    with pytest.raises(IndexError, match="out of bounds"):
+        adapter.layer_type(3, config=config)
+
+    desc = ArchitectureDescription(
+        model_id="LiquidAI/LFM3-1.7B",
+        family="lfm3",
+        num_layers=3,
+        total_params=1000,
+        topology="sequential_hybrid",
+        modules=[
+            ModuleRecord(name="model.embed_tokens", module_class="Embedding", param_count=100),
+            ModuleRecord(name="model.layers.0.conv.conv", module_class="Conv1d", layer_index=0, is_linear=False, param_count=14),
+            ModuleRecord(name="model.layers.0.conv.in_proj", module_class="Linear", layer_index=0, is_linear=True, param_count=50),
+            ModuleRecord(name="model.layers.0.conv.out_proj", module_class="Linear", layer_index=0, is_linear=True, param_count=50),
+            ModuleRecord(name="model.layers.1.self_attn.q_proj", module_class="Linear", layer_index=1, is_linear=True, param_count=50),
+            ModuleRecord(name="model.layers.1.self_attn.gate_proj", module_class="Linear", layer_index=1, is_linear=True, param_count=16),
+            ModuleRecord(name="model.layers.2.self_attn.q_proj", module_class="Linear", layer_index=2, is_linear=True, param_count=50),
+            ModuleRecord(name="model.layers.0.feed_forward.w1", module_class="Linear", layer_index=0, is_linear=True, param_count=50),
+            ModuleRecord(name="model.layers.0.operator_norm", module_class="Lfm3RMSNorm", layer_index=0, param_count=10),
+            ModuleRecord(name="lm_head", module_class="Linear", is_linear=True, param_count=100),
+        ],
+    )
+    desc = adapter.classify(desc, config=config)
+    desc = apply_validity(desc, backend="peft_mps")
+    m_by_name = {m.name: m for m in desc.modules}
+
+    assert m_by_name["model.embed_tokens"].component_type == ComponentType.EMBEDDING
+    assert m_by_name["model.layers.0.conv.in_proj"].component_type == ComponentType.SSM
+    assert m_by_name["model.layers.0.conv.in_proj"].validity == Validity.VALID
+    assert m_by_name["model.layers.0.conv.out_proj"].component_type == ComponentType.SSM
+    assert m_by_name["model.layers.0.conv.out_proj"].validity == Validity.VALID
+    assert m_by_name["model.layers.0.conv.conv"].validity == Validity.EXCLUDED
+    assert m_by_name["model.layers.1.self_attn.q_proj"].component_type == ComponentType.LOCAL_ATTENTION
+    assert m_by_name["model.layers.1.self_attn.gate_proj"].validity == Validity.EXCLUDED
+    assert m_by_name["model.layers.2.self_attn.q_proj"].component_type == ComponentType.GLOBAL_ATTENTION
+    assert m_by_name["model.layers.0.feed_forward.w1"].component_type == ComponentType.FFN
+    assert m_by_name["model.layers.0.operator_norm"].component_type == ComponentType.NORM
+    assert m_by_name["lm_head"].validity == Validity.EXCLUDED

@@ -19,6 +19,16 @@ KNOWN_EXCLUSIONS: dict[str, list[tuple[str, Validity, str]]] = {
         ("out_proj", Validity.EXCLUDED,
          "Same custom-kernel path as conv1d. Excluded in Borobia et al. Sec. 3.2."),
     ],
+    "lfm3": [
+        ("conv.conv", Validity.EXCLUDED,
+         "Width-7 depthwise short-convolution kernel (shape [2048, 1, 7], groups=2048); "
+         "requires r % groups == 0 under PEFT, cannot be merged, and is bypassed via direct "
+         "self.conv.weight.squeeze(1) access in _segmented_conv / causal_conv1d_fn kernels."),
+        ("self_attn.gate_proj", Validity.EXCLUDED,
+         "Per-head scalar sigmoid attention gate (shape [16, 2048], out_features=num_attention_heads=16); "
+         "rank r>=16 exceeds full matrix rank min(d_in, d_out)=16 and leaf name 'gate_proj' "
+         "collides with standard SwiGLU FFN naming."),
+    ],
 }
 
 

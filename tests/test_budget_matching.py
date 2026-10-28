@@ -191,3 +191,69 @@ def test_explicit_target_modules_non_default_rank_matches_peft() -> None:
     actual_trainable = sum(p.numel() for p in peft_model.parameters() if p.requires_grad)
     assert analytic_params == actual_trainable
 
+
+def test_lfm3_exact_trainable_parameter_counts_and_budget_parity() -> None:
+    """Verify analytical parameter counts and +/-5% parity across LFM3-1.7B's 4 groups."""
+    arch, grammar = _load_arch_and_grammar("lfm3_1_7b", "LiquidAI--LFM3-1.7B")
+
+    # P1: Uniform r=8 across Local Attn, Global Attn, SSM, FFN -> 8,052,736
+    p1 = TrialConfig(
+        model_id="LiquidAI/LFM3-1.7B",
+        group_settings={
+            "local_attention": GroupTrialSetting(enabled=True, rank=8, alpha=16),
+            "global_attention": GroupTrialSetting(enabled=True, rank=8, alpha=16),
+            "ssm": GroupTrialSetting(enabled=True, rank=8, alpha=16),
+            "ffn": GroupTrialSetting(enabled=True, rank=8, alpha=16),
+        },
+    )
+    assert p1.compute_trainable_params(arch, grammar) == 8_052_736
+
+    # P2: Exact 0.00% budget-matched Global-Attention Prioritized (r_local=8, r_global=16, r_ssm=4, r_ffn=8)
+    p2_exact = TrialConfig(
+        model_id="LiquidAI/LFM3-1.7B",
+        group_settings={
+            "local_attention": GroupTrialSetting(enabled=True, rank=8, alpha=16),
+            "global_attention": GroupTrialSetting(enabled=True, rank=16, alpha=32),
+            "ssm": GroupTrialSetting(enabled=True, rank=4, alpha=8),
+            "ffn": GroupTrialSetting(enabled=True, rank=8, alpha=16),
+        },
+    )
+    parity_p2 = p2_exact.validate_parameter_budget_parity(
+        arch, baseline_params=8_052_736, tolerance=0.05, grammar=grammar
+    )
+    assert parity_p2["candidate_params"] == 8_052_736
+    assert parity_p2["within_budget"] is True
+    assert parity_p2["relative_delta_pct"] == 0.0
+
+    # P3: Budget-matched (-4.37%) Operator-Prioritized (r_local=16, r_global=16, r_ssm=16, r_ffn=4)
+    p3_operators = TrialConfig(
+        model_id="LiquidAI/LFM3-1.7B",
+        group_settings={
+            "local_attention": GroupTrialSetting(enabled=True, rank=16, alpha=32),
+            "global_attention": GroupTrialSetting(enabled=True, rank=16, alpha=32),
+            "ssm": GroupTrialSetting(enabled=True, rank=16, alpha=32),
+            "ffn": GroupTrialSetting(enabled=True, rank=4, alpha=8),
+        },
+    )
+    parity_p3 = p3_operators.validate_parameter_budget_parity(
+        arch, baseline_params=8_052_736, tolerance=0.05, grammar=grammar
+    )
+    assert parity_p3["candidate_params"] == 7_700_480
+    assert parity_p3["within_budget"] is True
+    assert parity_p3["relative_delta_pct"] == -4.37
+
+    # Excluded conv.conv and self_attn.gate_proj must be rejected by validate_against_grammar
+    bad_conv = TrialConfig(
+        model_id="LiquidAI/LFM3-1.7B",
+        explicit_target_modules=["model.layers.0.conv.conv"],
+    )
+    with pytest.raises(InvalidConfigError, match="excluded by architecture grammar"):
+        bad_conv.validate_against_grammar(grammar)
+
+    bad_gate = TrialConfig(
+        model_id="LiquidAI/LFM3-1.7B",
+        explicit_target_modules=["model.layers.2.self_attn.gate_proj"],
+    )
+    with pytest.raises(InvalidConfigError, match="excluded by architecture grammar"):
+        bad_gate.validate_against_grammar(grammar)
+

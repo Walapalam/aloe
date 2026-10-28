@@ -113,7 +113,7 @@ class TrialConfig(BaseModel):
                     raise InvalidConfigError(
                         f"Target module '{target}' is excluded by architecture grammar: {reason}"
                     )
-                if "conv1d" in target.lower():
+                if "conv1d" in target.lower() or target.lower().endswith(".conv.conv"):
                     raise InvalidConfigError(
                         f"Target module '{target}' is a Conv1D kernel excluded by architectural convention."
                     )

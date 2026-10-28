@@ -73,6 +73,10 @@ class ModelRegistry:
         "falcon": "tiiuae/Falcon-H1-1.5B-Instruct",
         "falcon-h1": "tiiuae/Falcon-H1-1.5B-Instruct",
         "model_b": "tiiuae/Falcon-H1-1.5B-Instruct",
+        "lfm3": "LiquidAI/LFM3-1.7B",
+        "lfm3-1.7b": "LiquidAI/LFM3-1.7B",
+        "liquidai/lfm3-1.7b": "LiquidAI/LFM3-1.7B",
+        "model_c": "LiquidAI/LFM3-1.7B",
     }
 
     def __init__(self, runs_dir: Path | str = "runs/models") -> None:
@@ -140,12 +144,51 @@ class ModelRegistry:
             )
         return path
 
+    @staticmethod
+    def _ensure_lfm3_rope_compat() -> None:
+        """Ensure transformers >= 5.15 skips non-attention 'conv' RoPE and preserves 'conv' layer_types on LFM3."""
+        try:
+            from transformers.configuration_utils import PreTrainedConfig
+            from transformers.modeling_rope_utils import RotaryEmbeddingConfigMixin
+
+            if not getattr(RotaryEmbeddingConfigMixin, "_aloe_lfm3_patched", False):
+                orig_convert = RotaryEmbeddingConfigMixin.convert_rope_params_to_dict
+
+                def _safe_convert_rope_params_to_dict(self: Any, **kwargs: Any) -> Any:
+                    if getattr(self, "model_type", None) == "lfm3":
+                        return kwargs
+                    return orig_convert(self, **kwargs)
+
+                RotaryEmbeddingConfigMixin.convert_rope_params_to_dict = _safe_convert_rope_params_to_dict
+                RotaryEmbeddingConfigMixin._aloe_lfm3_patched = True  # type: ignore[attr-defined]
+
+            if not getattr(PreTrainedConfig, "_aloe_lfm3_layer_type_patched", False):
+                orig_validate_lt = PreTrainedConfig.validate_layer_type
+
+                def _safe_validate_layer_type(self: Any) -> None:
+                    if getattr(self, "model_type", None) == "lfm3":
+                        return
+                    orig_validate_lt(self)
+
+                PreTrainedConfig.validate_layer_type = _safe_validate_layer_type  # type: ignore[method-assign]
+                PreTrainedConfig._aloe_lfm3_layer_type_patched = True  # type: ignore[attr-defined]
+        except Exception:  # noqa: BLE001
+            pass
+
     def load_config(self, model_id_or_slug: str, **kwargs: Any) -> Any:
         """Load transformers AutoConfig for the model from the local snapshot."""
         from transformers import AutoConfig
 
+        self._ensure_lfm3_rope_compat()
         snapshot_path = self.get_snapshot_path(model_id_or_slug)
         return AutoConfig.from_pretrained(snapshot_path, trust_remote_code=True, **kwargs)
+
+    def load_config_from_hub_or_path(self, model_id_or_path: str | Path, **kwargs: Any) -> Any:
+        """Load transformers AutoConfig directly from a Hub repo ID or directory path."""
+        from transformers import AutoConfig
+
+        self._ensure_lfm3_rope_compat()
+        return AutoConfig.from_pretrained(model_id_or_path, trust_remote_code=True, **kwargs)
 
     def load_tokenizer(self, model_id_or_slug: str, **kwargs: Any) -> Any:
         """Load transformers AutoTokenizer for the model from the local snapshot."""
@@ -158,6 +201,7 @@ class ModelRegistry:
         """Load the model on PyTorch meta device for architectural inspection."""
         from transformers import AutoModelForCausalLM
 
+        self._ensure_lfm3_rope_compat()
         snapshot_path = self.get_snapshot_path(model_id_or_slug)
         return AutoModelForCausalLM.from_pretrained(
             snapshot_path,
@@ -165,6 +209,15 @@ class ModelRegistry:
             trust_remote_code=True,
             **kwargs,
         )
+
+    def load_model_meta_from_config(self, config: Any, **kwargs: Any) -> Any:
+        """Instantiate a causal LM on PyTorch meta device directly from its AutoConfig (0 weight bytes)."""
+        import torch
+        from transformers import AutoModelForCausalLM
+
+        self._ensure_lfm3_rope_compat()
+        with torch.device("meta"):
+            return AutoModelForCausalLM.from_config(config, trust_remote_code=True, **kwargs)
 
     def generate_registry_markdown(self, output_path: Path | str | None = None) -> str:
         """Programmatically generate human-readable REGISTRY.md from acquisition records."""

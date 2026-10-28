@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0",
+  "run_id": "7c481ca0-ddc2-423c-86f2-4d2bd4b7bfbc",
+  "timestamp_utc": "2026-10-28T14:01:10.747957+00:00",
+  "script": "verify_architecture.py",
+  "model_id": "LiquidAI/LFM3-1.7B",
+  "model_slug": "LiquidAI--LFM3-1.7B",
+  "gate_3": {
+    "gate_id": "Gate 3",
+    "name": "Architecture Claims Gate",
+    "status": "PASS",
+    "summary_sentence": "All Model C (LiquidAI/LFM3-1.7B) architectural claims verified: 24-layer sequential tri-hybrid topology (13 conv, 5 sliding_attention, 6 full_attention), 4-group grammar (142 valid linear targets), and 13 conv.conv + 11 self_attn.gate_proj exclusions confirmed."
+  },
+  "claims": [
+    {
+      "claim_id": "lfm3_tri_hybrid_layer_distribution",
+      "statement": "LiquidAI/LFM3-1.7B is a 24-layer sequential tri-hybrid model interleaving 13 gated short-convolution (conv) layers, 5 sliding-window local attention layers (window=256), and 6 full-context global attention layers (partial_rotary_factor=0.5).",
+      "status": "PASS",
+      "evidence": {
+        "named_config_field": "layer_types",
+        "num_hidden_layers": 24,
+        "conv_layers": [
+          0,
+          1,
+          3,
+          5,
+          7,
+          9,
+          11,
+          13,
+          15,
+          17,
+          19,
+          21,
+          23
+        ],
+        "sliding_attention_layers": [
+          4,
+          8,
+          12,
+          16,
+          20
+        ],
+        "full_attention_layers": [
+          2,
+          6,
+          10,
+          14,
+          18,
+          22
+        ],
+        "targets_by_group": {
+          "ssm": 26,
+          "ffn": 72,
+          "global_attention": 24,
+          "local_attention": 20
+        }
+      }
+    },
+    {
+      "claim_id": "lfm3_conv_and_gate_exclusions",
+      "statement": "All 13 depthwise short-convolution kernels (conv.conv, shape [2048, 1, 7], groups=2048) and 11 per-head scalar sigmoid attention gates (self_attn.gate_proj, shape [16, 2048]) are marked Validity.EXCLUDED with explicit architectural justification.",
+      "status": "PASS",
+      "evidence": {
+        "conv_excluded_count": 13,
+        "attn_gate_excluded_count": 11,
+        "total_excluded_count": 145,
+        "total_valid_targets": 142
+      }
+    }
+  ],
+  "status": "PASS"
+}

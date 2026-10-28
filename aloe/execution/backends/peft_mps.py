@@ -42,12 +42,14 @@ logger = logging.getLogger(__name__)
 
 
 def set_seed(seed: int = 42) -> None:
-    """Set deterministic seeds across random, numpy, and torch MPS."""
+    """Set deterministic seeds across random, numpy, and torch accelerators."""
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     if hasattr(torch, "mps") and torch.backends.mps.is_available():
         torch.mps.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
 
 
 def test_fresh_process_reload(
@@ -231,7 +233,7 @@ class PeftMPSBackend:
             if any(a <= 0 for a in group.alpha):
                 return False, f"Group {group.component_type} contains alpha <= 0."
             # Check for known incompatible modules
-            if any("conv1d" in t for t in group.targets):
+            if any("conv1d" in t or t.endswith(".conv.conv") for t in group.targets):
                 return False, f"Target conv1d in {group.component_type} is incompatible with PEFT."
 
         return True, "All groups and target modules supported by PEFT on MPS."
@@ -458,9 +460,15 @@ class PeftMPSBackend:
         # 2. Translate TrialConfig to PEFT LoraConfig (and validate against grammar)
         peft_kwargs, lora_cfg = config.to_peft_lora_config(grammar)
 
-        device = "mps" if (hasattr(torch.backends, "mps") and torch.backends.mps.is_available()) else "cpu"
+        if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+            device = "mps"
+        elif torch.cuda.is_available():
+            device = "cuda"
+        else:
+            device = "cpu"
 
         # 3. Load base model if not supplied
+        ModelRegistry._ensure_lfm3_rope_compat()
         created_base = False
         if base_model is None:
             base_model = AutoModelForCausalLM.from_pretrained(

@@ -32,6 +32,7 @@ def _ensure_adapters_loaded() -> None:
 
         importlib.import_module("aloe.architecture.adapters.falcon_h1")
         importlib.import_module("aloe.architecture.adapters.gemma4")
+        importlib.import_module("aloe.architecture.adapters.lfm3")
 
 
 def resolve(model_id: str, config) -> ModelAdapter:

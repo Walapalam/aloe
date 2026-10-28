@@ -1,0 +1,4226 @@
+{
+  "schema_version": "1.0",
+  "run_id": "7c481ca0-ddc2-423c-86f2-4d2bd4b7bfbc",
+  "timestamp_utc": "2026-10-28T14:01:10.747957+00:00",
+  "script": "verify_architecture.py",
+  "model_id": "LiquidAI/LFM3-1.7B",
+  "model_slug": "LiquidAI--LFM3-1.7B",
+  "revision": "40ebe0aa6662c9d40389c2f5d565b6a2c6aebacd",
+  "backend": "peft_mps",
+  "architecture": {
+    "model_id": "LiquidAI/LFM3-1.7B",
+    "family": "lfm3",
+    "num_layers": 24,
+    "total_params": 1990945536,
+    "topology": "sequential_hybrid",
+    "adaptable_types": [
+      "ssm",
+      "ffn",
+      "global_attention",
+      "local_attention"
+    ],
+    "modules_count": 287,
+    "modules": [
+      {
+        "name": "model.embed_tokens",
+        "module_class": "Embedding",
+        "layer_index": null,
+        "shape": [
+          128000,
+          2048
+        ],
+        "param_count": 262144000,
+        "parent": "model",
+        "is_linear": false,
+        "component_type": "embedding",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.0.conv.conv",
+        "module_class": "Conv1d",
+        "layer_index": 0,
+        "shape": [
+          2048,
+          1,
+          7
+        ],
+        "param_count": 14336,
+        "parent": "model.layers.0.conv",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Width-7 depthwise short-convolution kernel (shape [2048, 1, 7], groups=2048); requires r % groups == 0 under PEFT, cannot be merged, and is bypassed via direct self.conv.weight.squeeze(1) access in _segmented_conv / causal_conv1d_fn kernels."
+      },
+      {
+        "name": "model.layers.0.conv.in_proj",
+        "module_class": "Linear",
+        "layer_index": 0,
+        "shape": [
+          6144,
+          2048
+        ],
+        "param_count": 12582912,
+        "parent": "model.layers.0.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.0.conv.out_proj",
+        "module_class": "Linear",
+        "layer_index": 0,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.0.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.0.feed_forward.w1",
+        "module_class": "Linear",
+        "layer_index": 0,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.0.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.0.feed_forward.w3",
+        "module_class": "Linear",
+        "layer_index": 0,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.0.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.0.feed_forward.w2",
+        "module_class": "Linear",
+        "layer_index": 0,
+        "shape": [
+          2048,
+          7680
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.0.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.0.operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 0,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.0",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.0.ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 0,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.0",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.0.post_operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 0,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.0",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.0.post_ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 0,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.0",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.1.conv.conv",
+        "module_class": "Conv1d",
+        "layer_index": 1,
+        "shape": [
+          2048,
+          1,
+          7
+        ],
+        "param_count": 14336,
+        "parent": "model.layers.1.conv",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Width-7 depthwise short-convolution kernel (shape [2048, 1, 7], groups=2048); requires r % groups == 0 under PEFT, cannot be merged, and is bypassed via direct self.conv.weight.squeeze(1) access in _segmented_conv / causal_conv1d_fn kernels."
+      },
+      {
+        "name": "model.layers.1.conv.in_proj",
+        "module_class": "Linear",
+        "layer_index": 1,
+        "shape": [
+          6144,
+          2048
+        ],
+        "param_count": 12582912,
+        "parent": "model.layers.1.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.1.conv.out_proj",
+        "module_class": "Linear",
+        "layer_index": 1,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.1.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.1.feed_forward.w1",
+        "module_class": "Linear",
+        "layer_index": 1,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.1.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.1.feed_forward.w3",
+        "module_class": "Linear",
+        "layer_index": 1,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.1.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.1.feed_forward.w2",
+        "module_class": "Linear",
+        "layer_index": 1,
+        "shape": [
+          2048,
+          7680
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.1.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.1.operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 1,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.1",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.1.ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 1,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.1",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.1.post_operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 1,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.1",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.1.post_ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 1,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.1",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.2.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 2,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.2.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.2.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 2,
+        "shape": [
+          512,
+          2048
+        ],
+        "param_count": 1048576,
+        "parent": "model.layers.2.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.2.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 2,
+        "shape": [
+          512,
+          2048
+        ],
+        "param_count": 1048576,
+        "parent": "model.layers.2.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.2.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 2,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.2.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.2.self_attn.q_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 2,
+        "shape": [
+          128
+        ],
+        "param_count": 128,
+        "parent": "model.layers.2.self_attn",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.2.self_attn.k_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 2,
+        "shape": [
+          128
+        ],
+        "param_count": 128,
+        "parent": "model.layers.2.self_attn",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.2.self_attn.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 2,
+        "shape": [
+          16,
+          2048
+        ],
+        "param_count": 32768,
+        "parent": "model.layers.2.self_attn",
+        "is_linear": true,
+        "component_type": "other",
+        "validity": "excluded",
+        "validity_reason": "Per-head scalar sigmoid attention gate (shape [16, 2048], out_features=num_attention_heads=16); rank r>=16 exceeds full matrix rank min(d_in, d_out)=16 and leaf name 'gate_proj' collides with standard SwiGLU FFN naming."
+      },
+      {
+        "name": "model.layers.2.feed_forward.w1",
+        "module_class": "Linear",
+        "layer_index": 2,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.2.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.2.feed_forward.w3",
+        "module_class": "Linear",
+        "layer_index": 2,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.2.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.2.feed_forward.w2",
+        "module_class": "Linear",
+        "layer_index": 2,
+        "shape": [
+          2048,
+          7680
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.2.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.2.operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 2,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.2",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.2.ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 2,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.2",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.2.post_operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 2,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.2",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.2.post_ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 2,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.2",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.3.conv.conv",
+        "module_class": "Conv1d",
+        "layer_index": 3,
+        "shape": [
+          2048,
+          1,
+          7
+        ],
+        "param_count": 14336,
+        "parent": "model.layers.3.conv",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Width-7 depthwise short-convolution kernel (shape [2048, 1, 7], groups=2048); requires r % groups == 0 under PEFT, cannot be merged, and is bypassed via direct self.conv.weight.squeeze(1) access in _segmented_conv / causal_conv1d_fn kernels."
+      },
+      {
+        "name": "model.layers.3.conv.in_proj",
+        "module_class": "Linear",
+        "layer_index": 3,
+        "shape": [
+          6144,
+          2048
+        ],
+        "param_count": 12582912,
+        "parent": "model.layers.3.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.3.conv.out_proj",
+        "module_class": "Linear",
+        "layer_index": 3,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.3.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.3.feed_forward.w1",
+        "module_class": "Linear",
+        "layer_index": 3,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.3.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.3.feed_forward.w3",
+        "module_class": "Linear",
+        "layer_index": 3,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.3.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.3.feed_forward.w2",
+        "module_class": "Linear",
+        "layer_index": 3,
+        "shape": [
+          2048,
+          7680
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.3.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.3.operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 3,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.3",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.3.ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 3,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.3",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.3.post_operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 3,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.3",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.3.post_ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 3,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.3",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.4.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 4,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.4.self_attn",
+        "is_linear": true,
+        "component_type": "local_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.4.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 4,
+        "shape": [
+          512,
+          2048
+        ],
+        "param_count": 1048576,
+        "parent": "model.layers.4.self_attn",
+        "is_linear": true,
+        "component_type": "local_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.4.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 4,
+        "shape": [
+          512,
+          2048
+        ],
+        "param_count": 1048576,
+        "parent": "model.layers.4.self_attn",
+        "is_linear": true,
+        "component_type": "local_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.4.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 4,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.4.self_attn",
+        "is_linear": true,
+        "component_type": "local_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.4.self_attn.q_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 4,
+        "shape": [
+          128
+        ],
+        "param_count": 128,
+        "parent": "model.layers.4.self_attn",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.4.self_attn.k_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 4,
+        "shape": [
+          128
+        ],
+        "param_count": 128,
+        "parent": "model.layers.4.self_attn",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.4.self_attn.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 4,
+        "shape": [
+          16,
+          2048
+        ],
+        "param_count": 32768,
+        "parent": "model.layers.4.self_attn",
+        "is_linear": true,
+        "component_type": "other",
+        "validity": "excluded",
+        "validity_reason": "Per-head scalar sigmoid attention gate (shape [16, 2048], out_features=num_attention_heads=16); rank r>=16 exceeds full matrix rank min(d_in, d_out)=16 and leaf name 'gate_proj' collides with standard SwiGLU FFN naming."
+      },
+      {
+        "name": "model.layers.4.feed_forward.w1",
+        "module_class": "Linear",
+        "layer_index": 4,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.4.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.4.feed_forward.w3",
+        "module_class": "Linear",
+        "layer_index": 4,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.4.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.4.feed_forward.w2",
+        "module_class": "Linear",
+        "layer_index": 4,
+        "shape": [
+          2048,
+          7680
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.4.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.4.operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 4,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.4",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.4.ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 4,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.4",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.4.post_operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 4,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.4",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.4.post_ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 4,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.4",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.5.conv.conv",
+        "module_class": "Conv1d",
+        "layer_index": 5,
+        "shape": [
+          2048,
+          1,
+          7
+        ],
+        "param_count": 14336,
+        "parent": "model.layers.5.conv",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Width-7 depthwise short-convolution kernel (shape [2048, 1, 7], groups=2048); requires r % groups == 0 under PEFT, cannot be merged, and is bypassed via direct self.conv.weight.squeeze(1) access in _segmented_conv / causal_conv1d_fn kernels."
+      },
+      {
+        "name": "model.layers.5.conv.in_proj",
+        "module_class": "Linear",
+        "layer_index": 5,
+        "shape": [
+          6144,
+          2048
+        ],
+        "param_count": 12582912,
+        "parent": "model.layers.5.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.5.conv.out_proj",
+        "module_class": "Linear",
+        "layer_index": 5,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.5.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.5.feed_forward.w1",
+        "module_class": "Linear",
+        "layer_index": 5,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.5.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.5.feed_forward.w3",
+        "module_class": "Linear",
+        "layer_index": 5,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.5.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.5.feed_forward.w2",
+        "module_class": "Linear",
+        "layer_index": 5,
+        "shape": [
+          2048,
+          7680
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.5.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.5.operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 5,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.5",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.5.ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 5,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.5",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.5.post_operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 5,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.5",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.5.post_ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 5,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.5",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.6.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 6,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.6.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.6.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 6,
+        "shape": [
+          512,
+          2048
+        ],
+        "param_count": 1048576,
+        "parent": "model.layers.6.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.6.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 6,
+        "shape": [
+          512,
+          2048
+        ],
+        "param_count": 1048576,
+        "parent": "model.layers.6.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.6.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 6,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.6.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.6.self_attn.q_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 6,
+        "shape": [
+          128
+        ],
+        "param_count": 128,
+        "parent": "model.layers.6.self_attn",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.6.self_attn.k_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 6,
+        "shape": [
+          128
+        ],
+        "param_count": 128,
+        "parent": "model.layers.6.self_attn",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.6.self_attn.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 6,
+        "shape": [
+          16,
+          2048
+        ],
+        "param_count": 32768,
+        "parent": "model.layers.6.self_attn",
+        "is_linear": true,
+        "component_type": "other",
+        "validity": "excluded",
+        "validity_reason": "Per-head scalar sigmoid attention gate (shape [16, 2048], out_features=num_attention_heads=16); rank r>=16 exceeds full matrix rank min(d_in, d_out)=16 and leaf name 'gate_proj' collides with standard SwiGLU FFN naming."
+      },
+      {
+        "name": "model.layers.6.feed_forward.w1",
+        "module_class": "Linear",
+        "layer_index": 6,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.6.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.6.feed_forward.w3",
+        "module_class": "Linear",
+        "layer_index": 6,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.6.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.6.feed_forward.w2",
+        "module_class": "Linear",
+        "layer_index": 6,
+        "shape": [
+          2048,
+          7680
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.6.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.6.operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 6,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.6",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.6.ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 6,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.6",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.6.post_operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 6,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.6",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.6.post_ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 6,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.6",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.7.conv.conv",
+        "module_class": "Conv1d",
+        "layer_index": 7,
+        "shape": [
+          2048,
+          1,
+          7
+        ],
+        "param_count": 14336,
+        "parent": "model.layers.7.conv",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Width-7 depthwise short-convolution kernel (shape [2048, 1, 7], groups=2048); requires r % groups == 0 under PEFT, cannot be merged, and is bypassed via direct self.conv.weight.squeeze(1) access in _segmented_conv / causal_conv1d_fn kernels."
+      },
+      {
+        "name": "model.layers.7.conv.in_proj",
+        "module_class": "Linear",
+        "layer_index": 7,
+        "shape": [
+          6144,
+          2048
+        ],
+        "param_count": 12582912,
+        "parent": "model.layers.7.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.7.conv.out_proj",
+        "module_class": "Linear",
+        "layer_index": 7,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.7.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.7.feed_forward.w1",
+        "module_class": "Linear",
+        "layer_index": 7,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.7.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.7.feed_forward.w3",
+        "module_class": "Linear",
+        "layer_index": 7,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.7.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.7.feed_forward.w2",
+        "module_class": "Linear",
+        "layer_index": 7,
+        "shape": [
+          2048,
+          7680
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.7.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.7.operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 7,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.7",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.7.ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 7,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.7",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.7.post_operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 7,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.7",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.7.post_ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 7,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.7",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.8.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 8,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.8.self_attn",
+        "is_linear": true,
+        "component_type": "local_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.8.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 8,
+        "shape": [
+          512,
+          2048
+        ],
+        "param_count": 1048576,
+        "parent": "model.layers.8.self_attn",
+        "is_linear": true,
+        "component_type": "local_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.8.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 8,
+        "shape": [
+          512,
+          2048
+        ],
+        "param_count": 1048576,
+        "parent": "model.layers.8.self_attn",
+        "is_linear": true,
+        "component_type": "local_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.8.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 8,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.8.self_attn",
+        "is_linear": true,
+        "component_type": "local_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.8.self_attn.q_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 8,
+        "shape": [
+          128
+        ],
+        "param_count": 128,
+        "parent": "model.layers.8.self_attn",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.8.self_attn.k_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 8,
+        "shape": [
+          128
+        ],
+        "param_count": 128,
+        "parent": "model.layers.8.self_attn",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.8.self_attn.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 8,
+        "shape": [
+          16,
+          2048
+        ],
+        "param_count": 32768,
+        "parent": "model.layers.8.self_attn",
+        "is_linear": true,
+        "component_type": "other",
+        "validity": "excluded",
+        "validity_reason": "Per-head scalar sigmoid attention gate (shape [16, 2048], out_features=num_attention_heads=16); rank r>=16 exceeds full matrix rank min(d_in, d_out)=16 and leaf name 'gate_proj' collides with standard SwiGLU FFN naming."
+      },
+      {
+        "name": "model.layers.8.feed_forward.w1",
+        "module_class": "Linear",
+        "layer_index": 8,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.8.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.8.feed_forward.w3",
+        "module_class": "Linear",
+        "layer_index": 8,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.8.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.8.feed_forward.w2",
+        "module_class": "Linear",
+        "layer_index": 8,
+        "shape": [
+          2048,
+          7680
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.8.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.8.operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 8,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.8",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.8.ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 8,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.8",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.8.post_operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 8,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.8",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.8.post_ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 8,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.8",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.9.conv.conv",
+        "module_class": "Conv1d",
+        "layer_index": 9,
+        "shape": [
+          2048,
+          1,
+          7
+        ],
+        "param_count": 14336,
+        "parent": "model.layers.9.conv",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Width-7 depthwise short-convolution kernel (shape [2048, 1, 7], groups=2048); requires r % groups == 0 under PEFT, cannot be merged, and is bypassed via direct self.conv.weight.squeeze(1) access in _segmented_conv / causal_conv1d_fn kernels."
+      },
+      {
+        "name": "model.layers.9.conv.in_proj",
+        "module_class": "Linear",
+        "layer_index": 9,
+        "shape": [
+          6144,
+          2048
+        ],
+        "param_count": 12582912,
+        "parent": "model.layers.9.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.9.conv.out_proj",
+        "module_class": "Linear",
+        "layer_index": 9,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.9.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.9.feed_forward.w1",
+        "module_class": "Linear",
+        "layer_index": 9,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.9.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.9.feed_forward.w3",
+        "module_class": "Linear",
+        "layer_index": 9,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.9.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.9.feed_forward.w2",
+        "module_class": "Linear",
+        "layer_index": 9,
+        "shape": [
+          2048,
+          7680
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.9.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.9.operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 9,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.9",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.9.ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 9,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.9",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.9.post_operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 9,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.9",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.9.post_ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 9,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.9",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.10.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 10,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.10.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.10.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 10,
+        "shape": [
+          512,
+          2048
+        ],
+        "param_count": 1048576,
+        "parent": "model.layers.10.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.10.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 10,
+        "shape": [
+          512,
+          2048
+        ],
+        "param_count": 1048576,
+        "parent": "model.layers.10.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.10.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 10,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.10.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.10.self_attn.q_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 10,
+        "shape": [
+          128
+        ],
+        "param_count": 128,
+        "parent": "model.layers.10.self_attn",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.10.self_attn.k_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 10,
+        "shape": [
+          128
+        ],
+        "param_count": 128,
+        "parent": "model.layers.10.self_attn",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.10.self_attn.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 10,
+        "shape": [
+          16,
+          2048
+        ],
+        "param_count": 32768,
+        "parent": "model.layers.10.self_attn",
+        "is_linear": true,
+        "component_type": "other",
+        "validity": "excluded",
+        "validity_reason": "Per-head scalar sigmoid attention gate (shape [16, 2048], out_features=num_attention_heads=16); rank r>=16 exceeds full matrix rank min(d_in, d_out)=16 and leaf name 'gate_proj' collides with standard SwiGLU FFN naming."
+      },
+      {
+        "name": "model.layers.10.feed_forward.w1",
+        "module_class": "Linear",
+        "layer_index": 10,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.10.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.10.feed_forward.w3",
+        "module_class": "Linear",
+        "layer_index": 10,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.10.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.10.feed_forward.w2",
+        "module_class": "Linear",
+        "layer_index": 10,
+        "shape": [
+          2048,
+          7680
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.10.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.10.operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 10,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.10",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.10.ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 10,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.10",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.10.post_operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 10,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.10",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.10.post_ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 10,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.10",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.11.conv.conv",
+        "module_class": "Conv1d",
+        "layer_index": 11,
+        "shape": [
+          2048,
+          1,
+          7
+        ],
+        "param_count": 14336,
+        "parent": "model.layers.11.conv",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Width-7 depthwise short-convolution kernel (shape [2048, 1, 7], groups=2048); requires r % groups == 0 under PEFT, cannot be merged, and is bypassed via direct self.conv.weight.squeeze(1) access in _segmented_conv / causal_conv1d_fn kernels."
+      },
+      {
+        "name": "model.layers.11.conv.in_proj",
+        "module_class": "Linear",
+        "layer_index": 11,
+        "shape": [
+          6144,
+          2048
+        ],
+        "param_count": 12582912,
+        "parent": "model.layers.11.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.11.conv.out_proj",
+        "module_class": "Linear",
+        "layer_index": 11,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.11.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.11.feed_forward.w1",
+        "module_class": "Linear",
+        "layer_index": 11,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.11.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.11.feed_forward.w3",
+        "module_class": "Linear",
+        "layer_index": 11,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.11.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.11.feed_forward.w2",
+        "module_class": "Linear",
+        "layer_index": 11,
+        "shape": [
+          2048,
+          7680
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.11.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.11.operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 11,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.11",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.11.ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 11,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.11",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.11.post_operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 11,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.11",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.11.post_ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 11,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.11",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.12.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 12,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.12.self_attn",
+        "is_linear": true,
+        "component_type": "local_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.12.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 12,
+        "shape": [
+          512,
+          2048
+        ],
+        "param_count": 1048576,
+        "parent": "model.layers.12.self_attn",
+        "is_linear": true,
+        "component_type": "local_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.12.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 12,
+        "shape": [
+          512,
+          2048
+        ],
+        "param_count": 1048576,
+        "parent": "model.layers.12.self_attn",
+        "is_linear": true,
+        "component_type": "local_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.12.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 12,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.12.self_attn",
+        "is_linear": true,
+        "component_type": "local_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.12.self_attn.q_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 12,
+        "shape": [
+          128
+        ],
+        "param_count": 128,
+        "parent": "model.layers.12.self_attn",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.12.self_attn.k_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 12,
+        "shape": [
+          128
+        ],
+        "param_count": 128,
+        "parent": "model.layers.12.self_attn",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.12.self_attn.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 12,
+        "shape": [
+          16,
+          2048
+        ],
+        "param_count": 32768,
+        "parent": "model.layers.12.self_attn",
+        "is_linear": true,
+        "component_type": "other",
+        "validity": "excluded",
+        "validity_reason": "Per-head scalar sigmoid attention gate (shape [16, 2048], out_features=num_attention_heads=16); rank r>=16 exceeds full matrix rank min(d_in, d_out)=16 and leaf name 'gate_proj' collides with standard SwiGLU FFN naming."
+      },
+      {
+        "name": "model.layers.12.feed_forward.w1",
+        "module_class": "Linear",
+        "layer_index": 12,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.12.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.12.feed_forward.w3",
+        "module_class": "Linear",
+        "layer_index": 12,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.12.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.12.feed_forward.w2",
+        "module_class": "Linear",
+        "layer_index": 12,
+        "shape": [
+          2048,
+          7680
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.12.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.12.operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 12,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.12",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.12.ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 12,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.12",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.12.post_operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 12,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.12",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.12.post_ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 12,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.12",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.13.conv.conv",
+        "module_class": "Conv1d",
+        "layer_index": 13,
+        "shape": [
+          2048,
+          1,
+          7
+        ],
+        "param_count": 14336,
+        "parent": "model.layers.13.conv",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Width-7 depthwise short-convolution kernel (shape [2048, 1, 7], groups=2048); requires r % groups == 0 under PEFT, cannot be merged, and is bypassed via direct self.conv.weight.squeeze(1) access in _segmented_conv / causal_conv1d_fn kernels."
+      },
+      {
+        "name": "model.layers.13.conv.in_proj",
+        "module_class": "Linear",
+        "layer_index": 13,
+        "shape": [
+          6144,
+          2048
+        ],
+        "param_count": 12582912,
+        "parent": "model.layers.13.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.13.conv.out_proj",
+        "module_class": "Linear",
+        "layer_index": 13,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.13.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.13.feed_forward.w1",
+        "module_class": "Linear",
+        "layer_index": 13,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.13.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.13.feed_forward.w3",
+        "module_class": "Linear",
+        "layer_index": 13,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.13.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.13.feed_forward.w2",
+        "module_class": "Linear",
+        "layer_index": 13,
+        "shape": [
+          2048,
+          7680
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.13.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.13.operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 13,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.13",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.13.ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 13,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.13",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.13.post_operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 13,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.13",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.13.post_ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 13,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.13",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.14.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 14,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.14.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.14.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 14,
+        "shape": [
+          512,
+          2048
+        ],
+        "param_count": 1048576,
+        "parent": "model.layers.14.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.14.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 14,
+        "shape": [
+          512,
+          2048
+        ],
+        "param_count": 1048576,
+        "parent": "model.layers.14.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.14.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 14,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.14.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.14.self_attn.q_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 14,
+        "shape": [
+          128
+        ],
+        "param_count": 128,
+        "parent": "model.layers.14.self_attn",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.14.self_attn.k_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 14,
+        "shape": [
+          128
+        ],
+        "param_count": 128,
+        "parent": "model.layers.14.self_attn",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.14.self_attn.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 14,
+        "shape": [
+          16,
+          2048
+        ],
+        "param_count": 32768,
+        "parent": "model.layers.14.self_attn",
+        "is_linear": true,
+        "component_type": "other",
+        "validity": "excluded",
+        "validity_reason": "Per-head scalar sigmoid attention gate (shape [16, 2048], out_features=num_attention_heads=16); rank r>=16 exceeds full matrix rank min(d_in, d_out)=16 and leaf name 'gate_proj' collides with standard SwiGLU FFN naming."
+      },
+      {
+        "name": "model.layers.14.feed_forward.w1",
+        "module_class": "Linear",
+        "layer_index": 14,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.14.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.14.feed_forward.w3",
+        "module_class": "Linear",
+        "layer_index": 14,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.14.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.14.feed_forward.w2",
+        "module_class": "Linear",
+        "layer_index": 14,
+        "shape": [
+          2048,
+          7680
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.14.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.14.operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 14,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.14",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.14.ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 14,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.14",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.14.post_operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 14,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.14",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.14.post_ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 14,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.14",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.15.conv.conv",
+        "module_class": "Conv1d",
+        "layer_index": 15,
+        "shape": [
+          2048,
+          1,
+          7
+        ],
+        "param_count": 14336,
+        "parent": "model.layers.15.conv",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Width-7 depthwise short-convolution kernel (shape [2048, 1, 7], groups=2048); requires r % groups == 0 under PEFT, cannot be merged, and is bypassed via direct self.conv.weight.squeeze(1) access in _segmented_conv / causal_conv1d_fn kernels."
+      },
+      {
+        "name": "model.layers.15.conv.in_proj",
+        "module_class": "Linear",
+        "layer_index": 15,
+        "shape": [
+          6144,
+          2048
+        ],
+        "param_count": 12582912,
+        "parent": "model.layers.15.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.15.conv.out_proj",
+        "module_class": "Linear",
+        "layer_index": 15,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.15.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.15.feed_forward.w1",
+        "module_class": "Linear",
+        "layer_index": 15,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.15.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.15.feed_forward.w3",
+        "module_class": "Linear",
+        "layer_index": 15,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.15.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.15.feed_forward.w2",
+        "module_class": "Linear",
+        "layer_index": 15,
+        "shape": [
+          2048,
+          7680
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.15.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.15.operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 15,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.15",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.15.ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 15,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.15",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.15.post_operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 15,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.15",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.15.post_ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 15,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.15",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.16.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 16,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.16.self_attn",
+        "is_linear": true,
+        "component_type": "local_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.16.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 16,
+        "shape": [
+          512,
+          2048
+        ],
+        "param_count": 1048576,
+        "parent": "model.layers.16.self_attn",
+        "is_linear": true,
+        "component_type": "local_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.16.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 16,
+        "shape": [
+          512,
+          2048
+        ],
+        "param_count": 1048576,
+        "parent": "model.layers.16.self_attn",
+        "is_linear": true,
+        "component_type": "local_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.16.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 16,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.16.self_attn",
+        "is_linear": true,
+        "component_type": "local_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.16.self_attn.q_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 16,
+        "shape": [
+          128
+        ],
+        "param_count": 128,
+        "parent": "model.layers.16.self_attn",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.16.self_attn.k_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 16,
+        "shape": [
+          128
+        ],
+        "param_count": 128,
+        "parent": "model.layers.16.self_attn",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.16.self_attn.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 16,
+        "shape": [
+          16,
+          2048
+        ],
+        "param_count": 32768,
+        "parent": "model.layers.16.self_attn",
+        "is_linear": true,
+        "component_type": "other",
+        "validity": "excluded",
+        "validity_reason": "Per-head scalar sigmoid attention gate (shape [16, 2048], out_features=num_attention_heads=16); rank r>=16 exceeds full matrix rank min(d_in, d_out)=16 and leaf name 'gate_proj' collides with standard SwiGLU FFN naming."
+      },
+      {
+        "name": "model.layers.16.feed_forward.w1",
+        "module_class": "Linear",
+        "layer_index": 16,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.16.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.16.feed_forward.w3",
+        "module_class": "Linear",
+        "layer_index": 16,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.16.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.16.feed_forward.w2",
+        "module_class": "Linear",
+        "layer_index": 16,
+        "shape": [
+          2048,
+          7680
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.16.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.16.operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 16,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.16",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.16.ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 16,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.16",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.16.post_operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 16,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.16",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.16.post_ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 16,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.16",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.17.conv.conv",
+        "module_class": "Conv1d",
+        "layer_index": 17,
+        "shape": [
+          2048,
+          1,
+          7
+        ],
+        "param_count": 14336,
+        "parent": "model.layers.17.conv",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Width-7 depthwise short-convolution kernel (shape [2048, 1, 7], groups=2048); requires r % groups == 0 under PEFT, cannot be merged, and is bypassed via direct self.conv.weight.squeeze(1) access in _segmented_conv / causal_conv1d_fn kernels."
+      },
+      {
+        "name": "model.layers.17.conv.in_proj",
+        "module_class": "Linear",
+        "layer_index": 17,
+        "shape": [
+          6144,
+          2048
+        ],
+        "param_count": 12582912,
+        "parent": "model.layers.17.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.17.conv.out_proj",
+        "module_class": "Linear",
+        "layer_index": 17,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.17.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.17.feed_forward.w1",
+        "module_class": "Linear",
+        "layer_index": 17,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.17.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.17.feed_forward.w3",
+        "module_class": "Linear",
+        "layer_index": 17,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.17.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.17.feed_forward.w2",
+        "module_class": "Linear",
+        "layer_index": 17,
+        "shape": [
+          2048,
+          7680
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.17.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.17.operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 17,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.17",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.17.ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 17,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.17",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.17.post_operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 17,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.17",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.17.post_ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 17,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.17",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.18.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 18,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.18.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.18.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 18,
+        "shape": [
+          512,
+          2048
+        ],
+        "param_count": 1048576,
+        "parent": "model.layers.18.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.18.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 18,
+        "shape": [
+          512,
+          2048
+        ],
+        "param_count": 1048576,
+        "parent": "model.layers.18.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.18.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 18,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.18.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.18.self_attn.q_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 18,
+        "shape": [
+          128
+        ],
+        "param_count": 128,
+        "parent": "model.layers.18.self_attn",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.18.self_attn.k_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 18,
+        "shape": [
+          128
+        ],
+        "param_count": 128,
+        "parent": "model.layers.18.self_attn",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.18.self_attn.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 18,
+        "shape": [
+          16,
+          2048
+        ],
+        "param_count": 32768,
+        "parent": "model.layers.18.self_attn",
+        "is_linear": true,
+        "component_type": "other",
+        "validity": "excluded",
+        "validity_reason": "Per-head scalar sigmoid attention gate (shape [16, 2048], out_features=num_attention_heads=16); rank r>=16 exceeds full matrix rank min(d_in, d_out)=16 and leaf name 'gate_proj' collides with standard SwiGLU FFN naming."
+      },
+      {
+        "name": "model.layers.18.feed_forward.w1",
+        "module_class": "Linear",
+        "layer_index": 18,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.18.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.18.feed_forward.w3",
+        "module_class": "Linear",
+        "layer_index": 18,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.18.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.18.feed_forward.w2",
+        "module_class": "Linear",
+        "layer_index": 18,
+        "shape": [
+          2048,
+          7680
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.18.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.18.operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 18,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.18",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.18.ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 18,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.18",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.18.post_operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 18,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.18",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.18.post_ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 18,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.18",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.19.conv.conv",
+        "module_class": "Conv1d",
+        "layer_index": 19,
+        "shape": [
+          2048,
+          1,
+          7
+        ],
+        "param_count": 14336,
+        "parent": "model.layers.19.conv",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Width-7 depthwise short-convolution kernel (shape [2048, 1, 7], groups=2048); requires r % groups == 0 under PEFT, cannot be merged, and is bypassed via direct self.conv.weight.squeeze(1) access in _segmented_conv / causal_conv1d_fn kernels."
+      },
+      {
+        "name": "model.layers.19.conv.in_proj",
+        "module_class": "Linear",
+        "layer_index": 19,
+        "shape": [
+          6144,
+          2048
+        ],
+        "param_count": 12582912,
+        "parent": "model.layers.19.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.19.conv.out_proj",
+        "module_class": "Linear",
+        "layer_index": 19,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.19.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.19.feed_forward.w1",
+        "module_class": "Linear",
+        "layer_index": 19,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.19.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.19.feed_forward.w3",
+        "module_class": "Linear",
+        "layer_index": 19,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.19.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.19.feed_forward.w2",
+        "module_class": "Linear",
+        "layer_index": 19,
+        "shape": [
+          2048,
+          7680
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.19.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.19.operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 19,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.19",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.19.ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 19,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.19",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.19.post_operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 19,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.19",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.19.post_ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 19,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.19",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.20.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 20,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.20.self_attn",
+        "is_linear": true,
+        "component_type": "local_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.20.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 20,
+        "shape": [
+          512,
+          2048
+        ],
+        "param_count": 1048576,
+        "parent": "model.layers.20.self_attn",
+        "is_linear": true,
+        "component_type": "local_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.20.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 20,
+        "shape": [
+          512,
+          2048
+        ],
+        "param_count": 1048576,
+        "parent": "model.layers.20.self_attn",
+        "is_linear": true,
+        "component_type": "local_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.20.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 20,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.20.self_attn",
+        "is_linear": true,
+        "component_type": "local_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.20.self_attn.q_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 20,
+        "shape": [
+          128
+        ],
+        "param_count": 128,
+        "parent": "model.layers.20.self_attn",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.20.self_attn.k_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 20,
+        "shape": [
+          128
+        ],
+        "param_count": 128,
+        "parent": "model.layers.20.self_attn",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.20.self_attn.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 20,
+        "shape": [
+          16,
+          2048
+        ],
+        "param_count": 32768,
+        "parent": "model.layers.20.self_attn",
+        "is_linear": true,
+        "component_type": "other",
+        "validity": "excluded",
+        "validity_reason": "Per-head scalar sigmoid attention gate (shape [16, 2048], out_features=num_attention_heads=16); rank r>=16 exceeds full matrix rank min(d_in, d_out)=16 and leaf name 'gate_proj' collides with standard SwiGLU FFN naming."
+      },
+      {
+        "name": "model.layers.20.feed_forward.w1",
+        "module_class": "Linear",
+        "layer_index": 20,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.20.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.20.feed_forward.w3",
+        "module_class": "Linear",
+        "layer_index": 20,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.20.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.20.feed_forward.w2",
+        "module_class": "Linear",
+        "layer_index": 20,
+        "shape": [
+          2048,
+          7680
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.20.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.20.operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 20,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.20",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.20.ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 20,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.20",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.20.post_operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 20,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.20",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.20.post_ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 20,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.20",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.21.conv.conv",
+        "module_class": "Conv1d",
+        "layer_index": 21,
+        "shape": [
+          2048,
+          1,
+          7
+        ],
+        "param_count": 14336,
+        "parent": "model.layers.21.conv",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Width-7 depthwise short-convolution kernel (shape [2048, 1, 7], groups=2048); requires r % groups == 0 under PEFT, cannot be merged, and is bypassed via direct self.conv.weight.squeeze(1) access in _segmented_conv / causal_conv1d_fn kernels."
+      },
+      {
+        "name": "model.layers.21.conv.in_proj",
+        "module_class": "Linear",
+        "layer_index": 21,
+        "shape": [
+          6144,
+          2048
+        ],
+        "param_count": 12582912,
+        "parent": "model.layers.21.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.21.conv.out_proj",
+        "module_class": "Linear",
+        "layer_index": 21,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.21.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.21.feed_forward.w1",
+        "module_class": "Linear",
+        "layer_index": 21,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.21.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.21.feed_forward.w3",
+        "module_class": "Linear",
+        "layer_index": 21,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.21.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.21.feed_forward.w2",
+        "module_class": "Linear",
+        "layer_index": 21,
+        "shape": [
+          2048,
+          7680
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.21.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.21.operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 21,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.21",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.21.ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 21,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.21",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.21.post_operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 21,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.21",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.21.post_ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 21,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.21",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.22.self_attn.q_proj",
+        "module_class": "Linear",
+        "layer_index": 22,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.22.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.22.self_attn.k_proj",
+        "module_class": "Linear",
+        "layer_index": 22,
+        "shape": [
+          512,
+          2048
+        ],
+        "param_count": 1048576,
+        "parent": "model.layers.22.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.22.self_attn.v_proj",
+        "module_class": "Linear",
+        "layer_index": 22,
+        "shape": [
+          512,
+          2048
+        ],
+        "param_count": 1048576,
+        "parent": "model.layers.22.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.22.self_attn.o_proj",
+        "module_class": "Linear",
+        "layer_index": 22,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.22.self_attn",
+        "is_linear": true,
+        "component_type": "global_attention",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.22.self_attn.q_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 22,
+        "shape": [
+          128
+        ],
+        "param_count": 128,
+        "parent": "model.layers.22.self_attn",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.22.self_attn.k_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 22,
+        "shape": [
+          128
+        ],
+        "param_count": 128,
+        "parent": "model.layers.22.self_attn",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.22.self_attn.gate_proj",
+        "module_class": "Linear",
+        "layer_index": 22,
+        "shape": [
+          16,
+          2048
+        ],
+        "param_count": 32768,
+        "parent": "model.layers.22.self_attn",
+        "is_linear": true,
+        "component_type": "other",
+        "validity": "excluded",
+        "validity_reason": "Per-head scalar sigmoid attention gate (shape [16, 2048], out_features=num_attention_heads=16); rank r>=16 exceeds full matrix rank min(d_in, d_out)=16 and leaf name 'gate_proj' collides with standard SwiGLU FFN naming."
+      },
+      {
+        "name": "model.layers.22.feed_forward.w1",
+        "module_class": "Linear",
+        "layer_index": 22,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.22.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.22.feed_forward.w3",
+        "module_class": "Linear",
+        "layer_index": 22,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.22.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.22.feed_forward.w2",
+        "module_class": "Linear",
+        "layer_index": 22,
+        "shape": [
+          2048,
+          7680
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.22.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.22.operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 22,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.22",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.22.ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 22,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.22",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.22.post_operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 22,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.22",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.22.post_ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 22,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.22",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.23.conv.conv",
+        "module_class": "Conv1d",
+        "layer_index": 23,
+        "shape": [
+          2048,
+          1,
+          7
+        ],
+        "param_count": 14336,
+        "parent": "model.layers.23.conv",
+        "is_linear": false,
+        "component_type": "ssm",
+        "validity": "excluded",
+        "validity_reason": "Width-7 depthwise short-convolution kernel (shape [2048, 1, 7], groups=2048); requires r % groups == 0 under PEFT, cannot be merged, and is bypassed via direct self.conv.weight.squeeze(1) access in _segmented_conv / causal_conv1d_fn kernels."
+      },
+      {
+        "name": "model.layers.23.conv.in_proj",
+        "module_class": "Linear",
+        "layer_index": 23,
+        "shape": [
+          6144,
+          2048
+        ],
+        "param_count": 12582912,
+        "parent": "model.layers.23.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.23.conv.out_proj",
+        "module_class": "Linear",
+        "layer_index": 23,
+        "shape": [
+          2048,
+          2048
+        ],
+        "param_count": 4194304,
+        "parent": "model.layers.23.conv",
+        "is_linear": true,
+        "component_type": "ssm",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.23.feed_forward.w1",
+        "module_class": "Linear",
+        "layer_index": 23,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.23.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.23.feed_forward.w3",
+        "module_class": "Linear",
+        "layer_index": 23,
+        "shape": [
+          7680,
+          2048
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.23.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.23.feed_forward.w2",
+        "module_class": "Linear",
+        "layer_index": 23,
+        "shape": [
+          2048,
+          7680
+        ],
+        "param_count": 15728640,
+        "parent": "model.layers.23.feed_forward",
+        "is_linear": true,
+        "component_type": "ffn",
+        "validity": "valid",
+        "validity_reason": "Standard nn.Linear target."
+      },
+      {
+        "name": "model.layers.23.operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 23,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.23",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.23.ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 23,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.23",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.23.post_operator_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 23,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.23",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.layers.23.post_ffn_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": 23,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model.layers.23",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "model.embedding_norm",
+        "module_class": "Lfm3RMSNorm",
+        "layer_index": null,
+        "shape": [
+          2048
+        ],
+        "param_count": 2048,
+        "parent": "model",
+        "is_linear": false,
+        "component_type": "norm",
+        "validity": "excluded",
+        "validity_reason": "Not a low-rank adaptation target by convention."
+      },
+      {
+        "name": "lm_head",
+        "module_class": "Linear",
+        "layer_index": null,
+        "shape": [
+          128000,
+          2048
+        ],
+        "param_count": 262144000,
+        "parent": null,
+        "is_linear": true,
+        "component_type": "other",
+        "validity": "excluded",
+        "validity_reason": "Language model head; excluded by convention."
+      }
+    ]
+  },
+  "status": "PASS"
+}

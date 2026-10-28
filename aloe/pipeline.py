@@ -31,10 +31,15 @@ def inspect_to_grammar(
         backend = "peft_mps"
 
     reg = ModelRegistry(runs_models_dir)
-    model_meta = reg.load_model_meta(model_id)
-    config = reg.load_config(model_id)
-    record = reg.get(model_id)
-    canonical_id = record.model.id
+    try:
+        model_meta = reg.load_model_meta(model_id)
+        config = reg.load_config(model_id)
+        record = reg.get(model_id)
+        canonical_id = record.model.id
+    except (KeyError, FileNotFoundError):
+        canonical_id = reg.ALIASES.get(model_id.lower().strip(), model_id)
+        config = reg.load_config_from_hub_or_path(canonical_id)
+        model_meta = reg.load_model_meta_from_config(config)
 
     # 1. Structural inspection on meta tensors
     desc = inspect_model(model_meta, model_id=canonical_id)
