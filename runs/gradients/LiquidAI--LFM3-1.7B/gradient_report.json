@@ -1,11 +1,11 @@
 {
   "schema_version": "1.0",
-  "timestamp_utc": "2026-10-28T14:07:33.332109+00:00",
+  "timestamp_utc": "2026-10-28T14:34:44.543531+00:00",
   "model_id": "LiquidAI/LFM3-1.7B",
   "revision": "40ebe0aa6662c9d40389c2f5d565b6a2c6aebacd",
   "device": "mps",
   "hardware": "arm",
-  "full_weights_loaded": false,
+  "full_weights_loaded": true,
   "architecture": {
     "family": "lfm3",
     "topology": "sequential_hybrid",
@@ -49,9 +49,9 @@
         "adapter_param_count": 52,
         "gradient_ok_count": 52,
         "gradient_missing_count": 0,
-        "min_gradient_norm": 6.088168621063232,
-        "max_gradient_norm": 1387.3233642578125,
-        "elapsed_ms": 2618.15,
+        "min_gradient_norm": 447462.40625,
+        "max_gradient_norm": 157686752.0,
+        "elapsed_ms": 440.01,
         "verdict": "PASS"
       },
       "ffn": {
@@ -59,9 +59,9 @@
         "adapter_param_count": 144,
         "gradient_ok_count": 144,
         "gradient_missing_count": 0,
-        "min_gradient_norm": 6.2748894691467285,
-        "max_gradient_norm": 896.4400634765625,
-        "elapsed_ms": 554.29,
+        "min_gradient_norm": 165529.59375,
+        "max_gradient_norm": 246863008.0,
+        "elapsed_ms": 366.48,
         "verdict": "PASS"
       },
       "global_attention": {
@@ -69,9 +69,9 @@
         "adapter_param_count": 48,
         "gradient_ok_count": 48,
         "gradient_missing_count": 0,
-        "min_gradient_norm": 0.9259787797927856,
-        "max_gradient_norm": 382.8105773925781,
-        "elapsed_ms": 166.24,
+        "min_gradient_norm": 28399.86328125,
+        "max_gradient_norm": 32787324.0,
+        "elapsed_ms": 255.62,
         "verdict": "PASS"
       },
       "local_attention": {
@@ -79,9 +79,9 @@
         "adapter_param_count": 40,
         "gradient_ok_count": 40,
         "gradient_missing_count": 0,
-        "min_gradient_norm": 1.5350896120071411,
-        "max_gradient_norm": 238.50721740722656,
-        "elapsed_ms": 415.69,
+        "min_gradient_norm": 78533.671875,
+        "max_gradient_norm": 25465834.0,
+        "elapsed_ms": 239.43,
         "verdict": "PASS"
       }
     },
@@ -93,6 +93,68 @@
       "verdict": "CONFIRMED_INERT"
     }
   },
-  "total_elapsed_sec": 7.655,
+  "sft_pilot": {
+    "base_zero_shot": {
+      "trainable_params": 0,
+      "relative_delta_pct": -100.0,
+      "ast_eval": {
+        "total_samples": 8,
+        "parse_success_rate": 0.0,
+        "tool_selection_accuracy": 0.0,
+        "argument_name_accuracy": 0.0,
+        "argument_value_accuracy": 0.0,
+        "exact_match_accuracy": 0.0
+      }
+    },
+    "P1_Uniform_r8": {
+      "trainable_params": 8052736,
+      "relative_delta_pct": 0.0,
+      "within_5pct_budget": true,
+      "initial_loss": 1.8678,
+      "final_loss": 0.4768,
+      "train_seconds": 12.49,
+      "ast_eval": {
+        "total_samples": 8,
+        "parse_success_rate": 0.625,
+        "tool_selection_accuracy": 0.625,
+        "argument_name_accuracy": 0.625,
+        "argument_value_accuracy": 0.25,
+        "exact_match_accuracy": 0.25
+      }
+    },
+    "P2_Global_Exact_Parity": {
+      "trainable_params": 8052736,
+      "relative_delta_pct": 0.0,
+      "within_5pct_budget": true,
+      "initial_loss": 1.8678,
+      "final_loss": 0.4753,
+      "train_seconds": 12.34,
+      "ast_eval": {
+        "total_samples": 8,
+        "parse_success_rate": 0.625,
+        "tool_selection_accuracy": 0.625,
+        "argument_name_accuracy": 0.625,
+        "argument_value_accuracy": 0.25,
+        "exact_match_accuracy": 0.25
+      }
+    },
+    "P3_Operator_Prioritized": {
+      "trainable_params": 7700480,
+      "relative_delta_pct": -4.37,
+      "within_5pct_budget": true,
+      "initial_loss": 1.8678,
+      "final_loss": 0.4708,
+      "train_seconds": 12.33,
+      "ast_eval": {
+        "total_samples": 8,
+        "parse_success_rate": 0.625,
+        "tool_selection_accuracy": 0.625,
+        "argument_name_accuracy": 0.625,
+        "argument_value_accuracy": 0.25,
+        "exact_match_accuracy": 0.25
+      }
+    }
+  },
+  "total_elapsed_sec": 119.139,
   "status": "PASS"
 }

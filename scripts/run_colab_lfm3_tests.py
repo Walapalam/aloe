@@ -28,7 +28,7 @@ from aloe.architecture.constraints import apply_validity
 from aloe.architecture.inspector import inspect_model
 from aloe.architecture.typing import classify
 from aloe.datasets.model_registry import ModelRegistry
-from aloe.datasets.xlam import XLAMExample
+from aloe.datasets.xlam import XLAMExample, parse_xlam_record
 from aloe.evaluation.tool_calling import ASTToolCallEvaluator
 from aloe.execution.backends.peft_mps import PeftMPSBackend, set_seed, tokenize_xlam_sft_example
 from aloe.execution.trial_config import GroupTrialSetting, InvalidConfigError, TrialConfig
@@ -113,8 +113,8 @@ def run_lfm3_sft_pilot(
 ) -> dict[str, Any]:
     mini_path = Path(__file__).resolve().parent.parent / "data" / "manifests" / "xlam_mini_pilot.json"
     raw = json.loads(mini_path.read_text(encoding="utf-8"))
-    train_examples = [XLAMExample.model_validate(x) for x in raw["train"]]
-    val_examples = [XLAMExample.model_validate(x) for x in raw["validation"]]
+    train_examples = [parse_xlam_record(x, idx) for idx, x in enumerate(raw["train"])]
+    val_examples = [parse_xlam_record(x, idx) for idx, x in enumerate(raw["validation"])]
 
     print("-" * 76)
     print(f"Step 4: Running LFM3-1.7B Zero-Shot & Budget-Matched SFT Pilot ({steps} steps, {max_eval} eval samples)")
