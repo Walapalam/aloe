@@ -210,11 +210,15 @@ class TrialConfig(BaseModel):
 
         total_params = 0
         if self.explicit_target_modules:
+            explicit_r = min(
+                (g.rank for g in self.group_settings.values() if g.enabled),
+                default=8,
+            )
             for mod in self.explicit_target_modules:
                 if mod not in shapes:
                     raise InvalidConfigError(f"Module '{mod}' has no 2D linear shape in architecture.")
                 d_out, d_in = shapes[mod]
-                total_params += 8 * (d_in + d_out)
+                total_params += explicit_r * (d_in + d_out)
         elif grammar is not None:
             grammar_group_types = {g.component_type.value: g for g in grammar.groups}
             for g_name, g_dim in grammar_group_types.items():
