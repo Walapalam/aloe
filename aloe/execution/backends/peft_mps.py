@@ -475,7 +475,10 @@ class PeftMPSBackend:
 
         # 1. Resolve grammar and snapshot
         registry = ModelRegistry()
-        snapshot_path = registry.get_snapshot_path(config.model_id)
+        try:
+            snapshot_path: Path | str = registry.get_snapshot_path(config.model_id)
+        except (KeyError, FileNotFoundError):
+            snapshot_path = config.model_id
 
         if grammar is None:
             from aloe.pipeline import inspect_to_grammar
