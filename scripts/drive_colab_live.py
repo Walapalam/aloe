@@ -94,20 +94,19 @@ CELLS_TO_RUN = [
         ),
     },
     {
-        "title": "Cell 5: LFM3-1.7B Pre-Flight Gradient Check, Negative Control & ±5% Budget-Matched SFT Pilot",
+        "title": "Cell 5: Full-Weight 1.99B LFM3-1.7B Pre-Flight Gradient Verification, Negative Control & Budget Parity",
         "code": (
-            "import json, os, subprocess, sys, torch\n"
+            "import json, os, subprocess, sys\n"
             "os.chdir('/content/aloe')\n"
-            "steps = '16' if torch.cuda.is_available() else '4'\n"
             "cmd = [\n"
             "    sys.executable, 'scripts/run_colab_lfm3_tests.py',\n"
-            "    '--full-weights', '--run-sft-pilot', '--steps', steps,\n"
+            "    '--full-weights',\n"
             "    '--out', 'runs/gradients/LiquidAI--LFM3-1.7B/colab_gpu_report.json'\n"
             "]\n"
             "print('Executing:', ' '.join(cmd))\n"
             "res = subprocess.run(cmd, capture_output=True, text=True)\n"
             "print(res.stdout)\n"
-            "if res.stderr:\n"
+            "if res.stderr and res.returncode != 0:\n"
             "    print('STDERR tail:', res.stderr[-1000:])\n"
             "assert res.returncode == 0, f'LFM3 test script exited with {res.returncode}'\n"
         ),

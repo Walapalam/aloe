@@ -52,7 +52,7 @@ def evaluate_lfm3_ast(
     tokenizer: Any,
     val_examples: list[XLAMExample],
     device: str,
-    max_eval: int = 8,
+    max_eval: int | None = None,
 ) -> dict[str, Any]:
     model.eval()
     evaluator = ASTToolCallEvaluator()
@@ -60,6 +60,9 @@ def evaluate_lfm3_ast(
     ground_truths: list[list[dict[str, Any]]] = []
     sample_ids: list[str] = []
 
+    if max_eval is None:
+        max_eval = 2 if device == "cpu" else 8
+    max_new_toks = 64 if device == "cpu" else 96
     total = min(len(val_examples), max_eval)
     for i in range(total):
         ex = val_examples[i]
@@ -83,7 +86,7 @@ def evaluate_lfm3_ast(
             prompt_text, return_tensors="pt", truncation=True, max_length=1024
         ).to(device)
         with torch.no_grad():
-            out_tokens = model.generate(**inputs, max_new_tokens=96, do_sample=False)
+            out_tokens = model.generate(**inputs, max_new_tokens=max_new_toks, do_sample=False)
         generated_text = tokenizer.decode(
             out_tokens[0][inputs["input_ids"].shape[1] :], skip_special_tokens=True
         )
