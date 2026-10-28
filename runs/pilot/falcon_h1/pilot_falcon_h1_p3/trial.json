@@ -1,0 +1,80 @@
+{
+  "schema_version": "1.0",
+  "trial_id": "pilot_falcon_h1_p3",
+  "timestamp_utc": "2026-10-28T09:08:22.162300+00:00",
+  "git_commit": "8ebdba874dec8e0133114b486b0aac1a376d45f2",
+  "dataset_manifest_sha256": "cfe8c2016f5e1eafdad4f03bc3b3b6d4eb1b4b96f260d8d75a74e12b2f89c588",
+  "hardware": "Apple M1 Max (64 GB unified memory), macOS, MPS",
+  "library_versions": {
+    "torch": "2.14.0",
+    "peft": "0.21.0",
+    "transformers": "5.17.0"
+  },
+  "model_id": "tiiuae/Falcon-H1-1.5B-Instruct",
+  "backend": "peft_mps",
+  "trial_config": {
+    "trial_id": "pilot_falcon_h1_p3",
+    "model_id": "tiiuae/Falcon-H1-1.5B-Instruct",
+    "model_revision": "main",
+    "backend": "peft_mps",
+    "dataset_manifest_path": "data/manifests/xlam_pilot_v1.json",
+    "dataset_raw_path": "data/raw/xlam/xlam_function_calling_60k.json",
+    "seed": 42,
+    "group_settings": {
+      "global_attention": {
+        "enabled": true,
+        "rank": 4,
+        "alpha": 64
+      },
+      "ssm": {
+        "enabled": true,
+        "rank": 8,
+        "alpha": 16
+      },
+      "ffn": {
+        "enabled": true,
+        "rank": 16,
+        "alpha": 32
+      }
+    },
+    "training": {
+      "learning_rate": 0.0002,
+      "batch_size": 2,
+      "gradient_accumulation_steps": 4,
+      "max_steps": 12,
+      "max_seq_len": 128,
+      "warmup_steps": 5,
+      "weight_decay": 0.01,
+      "precision": "bf16",
+      "adapter_dtype": "fp32"
+    },
+    "explicit_target_modules": null,
+    "description": "Typed Unmatched B \u2014 Global Attn r=4 \u03b1=64, SSM r=8 \u03b1=16, FFN r=16 \u03b1=32 (10,380,288 params; +36.97%)"
+  },
+  "metrics": {
+    "peak_memory_gb": 5.07,
+    "peak_rss_gb": 5.07,
+    "mps_driver_allocated_gb": 1.9756,
+    "train_seconds": 85.341,
+    "latency_per_step_sec": 6.8909,
+    "trainable_params": 10380288,
+    "total_params": 1565243776,
+    "trainable_ratio": 0.006632,
+    "adapter_size_mb": 39.67,
+    "initial_train_loss": 1.5534,
+    "final_train_loss": 0.1413,
+    "val_loss": null,
+    "tool_accuracy": 1.0,
+    "ast_parse_success_rate": 1.0,
+    "ast_tool_selection_accuracy": 1.0,
+    "ast_argument_name_accuracy": 1.0,
+    "ast_argument_value_accuracy": 0.75,
+    "ast_exact_match_accuracy": 0.75,
+    "param_delta_vs_baseline_pct": 36.97,
+    "is_budget_matched_5pct": false,
+    "fresh_process_reload": true
+  },
+  "status": "PASS",
+  "failures": [],
+  "not_determined": []
+}

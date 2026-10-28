@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "trial_id": "pilot_falcon_h1_p1",
   "timestamp_utc": "2026-10-28T08:52:55.289501+00:00",
-  "git_commit": "215d2e5de5e74a4740cdd3b09ae5168638211a15",
+  "git_commit": "8ebdba874dec8e0133114b486b0aac1a376d45f2",
   "dataset_manifest_sha256": "cfe8c2016f5e1eafdad4f03bc3b3b6d4eb1b4b96f260d8d75a74e12b2f89c588",
   "hardware": "Apple M1 Max (64 GB unified memory), macOS, MPS",
   "library_versions": {
@@ -45,10 +45,11 @@
       "max_seq_len": 128,
       "warmup_steps": 5,
       "weight_decay": 0.01,
-      "precision": "bf16"
+      "precision": "bf16",
+      "adapter_dtype": "fp32"
     },
     "explicit_target_modules": null,
-    "description": "Baseline — Uniform LoRA r=8, α=16 across all groups (7,578,624 params)"
+    "description": "Baseline \u2014 Uniform LoRA r=8, \u03b1=16 across all groups (7,578,624 params)"
   },
   "metrics": {
     "peak_memory_gb": 4.5758,

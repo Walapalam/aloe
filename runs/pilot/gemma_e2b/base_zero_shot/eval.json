@@ -1,0 +1,17 @@
+{
+  "model_id": "google/gemma-4-E2B-it",
+  "slug": "gemma_e2b",
+  "regime": "zero_shot_base_model",
+  "git_commit": "8ebdba874dec8e0133114b486b0aac1a376d45f2",
+  "dataset_manifest_sha256": "cfe8c2016f5e1eafdad4f03bc3b3b6d4eb1b4b96f260d8d75a74e12b2f89c588",
+  "eval_samples": 8,
+  "max_length": 1024,
+  "max_new_tokens": 96,
+  "trainable_params": 0,
+  "param_delta_vs_baseline_pct": -100.0,
+  "ast_parse_success_rate": 0.75,
+  "ast_tool_selection_accuracy": 0.75,
+  "ast_argument_name_accuracy": 0.625,
+  "ast_argument_value_accuracy": 0.375,
+  "ast_exact_match_accuracy": 0.375
+}
