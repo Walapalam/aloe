@@ -136,16 +136,11 @@ class TrialConfig(BaseModel):
                         )
 
     def _explicit_rank_and_alpha(self) -> tuple[int, int]:
-        """Resolve rank and alpha for explicit_target_modules consistently across config and parameter counting."""
-        explicit_r = min(
-            (g.rank for g in self.group_settings.values() if g.enabled),
-            default=8,
+        """Resolve rank and alpha pair for explicit_target_modules consistently across config and parameter counting."""
+        return min(
+            ((g.rank, g.alpha) for g in self.group_settings.values() if g.enabled),
+            default=(8, 16),
         )
-        explicit_alpha = min(
-            (g.alpha for g in self.group_settings.values() if g.enabled),
-            default=16,
-        )
-        return explicit_r, explicit_alpha
 
     def to_peft_lora_config(self, grammar: SearchGrammar | None = None) -> tuple[dict[str, Any], Any]:
         """Convert TrialConfig to PEFT LoraConfig keyword arguments and LoraConfig instance."""
