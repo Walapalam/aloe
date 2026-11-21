@@ -135,9 +135,3 @@ If you utilize ALOE in academic research or technical benchmarks, please cite:
   url    = {https://github.com/walapalam/aloe}
 }
 ```
-
----
-
-## License
-
-This project is licensed under the Apache License 2.0. See [`LICENSE`](LICENSE) for details.
