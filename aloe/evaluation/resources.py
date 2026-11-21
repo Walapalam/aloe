@@ -126,19 +126,22 @@ def enforce_hardware_contract(
     hw = detect_hardware_summary()
     mid = model_id.lower()
 
-    if pinned_gpu or exact_gpu_name:
+    if pinned_gpu:
         if device != "cuda" or not hw.get("gpu_name"):
             raise RuntimeError(
-                f"Hardware contract violation: pinned_gpu='{pinned_gpu or exact_gpu_name}' requires CUDA GPU, "
+                f"Hardware contract violation: pinned_gpu='{pinned_gpu}' requires CUDA GPU, "
                 f"but active device is '{device}' ({hw['hardware_label']})."
             )
         actual_gpu = str(hw["gpu_name"])
-        if pinned_gpu and pinned_gpu.lower() not in actual_gpu.lower():
+        if pinned_gpu.lower() not in actual_gpu.lower():
             raise RuntimeError(
                 f"GPU SKU mismatch: expected '{pinned_gpu}', got '{actual_gpu}'. "
                 "Mixing GPU SKUs within a campaign invalidates VRAM comparisons."
             )
-        if exact_gpu_name and actual_gpu != exact_gpu_name:
+
+    if exact_gpu_name:
+        actual_gpu = str(hw.get("gpu_name") or hw["hardware_label"])
+        if actual_gpu != exact_gpu_name:
             raise RuntimeError(
                 f"Exact GPU SKU lock violation: campaign locked to '{exact_gpu_name}', got '{actual_gpu}'. "
                 "Mixing e.g. 40GB and 80GB variants within a campaign is forbidden."

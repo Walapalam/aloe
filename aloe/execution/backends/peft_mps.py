@@ -824,6 +824,7 @@ class PeftMPSBackend:
             else torch.bfloat16
         )
 
+        ModelRegistry._ensure_lfm3_rope_compat()
         if base_model is None:
             base_model = AutoModelForCausalLM.from_pretrained(
                 snapshot_path,

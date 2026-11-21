@@ -55,7 +55,7 @@ class TrainingParameters(BaseModel):
     batch_size: int = 2
     gradient_accumulation_steps: int = 4
     max_steps: int = 125
-    max_seq_len: int = 1024
+    max_seq_len: int = 1536
     max_new_tokens: int = 192
     warmup_steps: int = 10
     weight_decay: float = 0.01
