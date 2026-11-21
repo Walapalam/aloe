@@ -1,4 +1,4 @@
-"""High-level inspection and grammar generation pipeline for ALOE (Prompt 8 / Gate B).
+"""High-level inspection and grammar generation pipeline for ALOE (Gate B).
 
 Implements inspect_to_grammar(model_id, backend) which:
 1. Loads model on PyTorch meta device (no weights loaded).

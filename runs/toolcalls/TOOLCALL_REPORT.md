@@ -71,6 +71,6 @@
 
 ## 3. Findings & Research Baseline Analysis
 
-- **Base Model Zero-Shot Behavior**: As anticipated by Prompt 6, compact ~1.5B–2B base models without fine-tuning exhibit mixed zero-shot tool invocation, confirming the necessity of ALOE's architecture-typed LoRA optimization.
+- **Base Model Zero-Shot Behavior**: Prior to fine-tuning, compact ~1.5B–2B base models exhibit mixed zero-shot tool invocation, confirming the necessity of ALOE's architecture-typed LoRA optimization.
 - **Plumbing Integrity**: Native tokenizers, chat templates, and greedy decoding pipelines function reliably without crashes on Apple Silicon MPS.
 - **Baseline Benchmark Established**: These 10 baseline outputs provide the empirical zero-shot reference against which future fine-tuned adapters will be measured.

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Execute budget-matched (±5%) pilot trials and full AST tool+argument evaluation.
 
-Addresses supervisor feedback and Claude Opus audit on PoC fairness:
+Addresses parameter-budget parity and AST evaluation requirements on PoC fairness:
 1. Enforces ±5% parameter-budget parity on both architectures:
    - Gemma 4 E2B:
      * P1 (Uniform r=8, α=16): 12,079,104 params (0.00%)

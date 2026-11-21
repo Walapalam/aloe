@@ -131,7 +131,7 @@ cat aloe/runs/pilot/PILOT_REPORT.md | grep -A 10 "Results: Gemma 4 E2B"
 > 
 > *Why is this significant? It demonstrates that for agentic tool use, attention projections dominate reasoning capacity, while feed-forward parameters can be compressed. This provides the empirical basis for our October Bayesian optimization.*
 > 
-> *Notice also our memory metric: we track **sampled process RSS at 100ms**, not the driver-allocated pool. The driver allocated only 1.19 GB, but the operating system process consumed 11.31 GB. Reporting driver memory would underestimate real system pressure by nearly 10-fold—a classic viva trap we avoid under ADR-004.*
+> *Notice also our memory metric: we track **sampled process RSS at 100ms**, not the driver-allocated pool. The driver allocated only 1.19 GB, but the operating system process consumed 11.31 GB. Reporting driver memory would underestimate real system pressure by nearly 10-fold—which ADR-004 explicitly avoids.*
 > 
 > *Finally, observe the latency asymmetry documented in ADR-012: Gemma trains at 713 ms/step, while Falcon-H1 trains at 6,918 ms/step because Mamba chunk scanning falls back to reference PyTorch loops on MPS. We have explicitly budgeted for this in our search design."*
 

@@ -1,4 +1,4 @@
-"""PEFT execution backend for Apple Silicon MPS (Stage 4 / Prompt 9 / Gate C).
+"""PEFT execution backend for Apple Silicon MPS (Stage 4 / Gate C).
 
 Implements the ExecutionBackend protocol for Apple Silicon using HuggingFace PEFT
 and PyTorch's MPS backend. Provides empirical gradient verification across
@@ -460,7 +460,7 @@ class PeftMPSBackend:
     ) -> TrialResultEnvelope:
         """Execute a complete training trial under a given TrialConfig and record to TrialStore.
 
-        Follows mandatory Prompt 9 Gate C execution protocol:
+        Follows mandatory Gate C execution protocol:
         1. Pre-train gradient verification check via verify_gradients(). Aborts if GRADIENT_MISSING.
         2. Train on the disjoint xLAM split.
         3. Periodic 100ms background memory sampling (process RSS + MPS driver allocation).
@@ -511,7 +511,7 @@ class PeftMPSBackend:
             if tokenizer.pad_token is None:
                 tokenizer.pad_token = tokenizer.eos_token
 
-        # 4. Mandatory Pre-train Gradient Verification (Prompt 9 Step 1)
+        # 4. Mandatory Pre-train Gradient Verification (Gate C Step 1)
         logger.info(f"[{trial_id}] Running pre-train gradient check on {len(lora_cfg.target_modules)} targets...")
         grad_check = self.verify_gradients(
             model=base_model,
@@ -576,7 +576,7 @@ class PeftMPSBackend:
             )
             train_batch.append(batch_item)
 
-        # 7. Start Resource Profiler (Prompt 9 Step 3)
+        # 7. Start Resource Profiler (Gate C Step 3)
         profiler = ResourceProfiler(sample_interval_ms=100)
         profiler.start()
         t_start = time.time()
@@ -617,7 +617,7 @@ class PeftMPSBackend:
         train_seconds = round(t_end - t_start, 3)
         latency_per_step_sec = round(float(np.mean(step_durations)), 4) if step_durations else 0.0
 
-        # 8. Save adapter (Prompt 9 Step 4)
+        # 8. Save adapter (Gate C Step 4)
         peft_model.save_pretrained(adapter_dir)
         adapter_size_bytes = sum(p.stat().st_size for p in adapter_dir.rglob("*") if p.is_file())
         adapter_size_mb = round(adapter_size_bytes / (1024**2), 3)
@@ -629,10 +629,10 @@ class PeftMPSBackend:
         if hasattr(torch, "mps") and hasattr(torch.mps, "empty_cache"):
             torch.mps.empty_cache()
 
-        # 9. Fresh Subprocess Reload Verification (Prompt 9 Step 4)
+        # 9. Fresh Subprocess Reload Verification (Gate C Step 4)
         reload_result = test_fresh_process_reload(snapshot_path, adapter_dir, device=device)
 
-        # 10. Assemble Result Envelope (Prompt 9 Step 5)
+        # 10. Assemble Result Envelope (Gate C Step 5)
         metrics = TrialMetrics(
             peak_memory_gb=mem_stats["peak_memory_gb"],
             peak_rss_gb=mem_stats["peak_rss_gb"],

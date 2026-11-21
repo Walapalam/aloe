@@ -1,4 +1,4 @@
-"""xLAM Function-Calling Dataset Loader & Schema Models (Prompt 7 / Stage 7).
+"""xLAM Function-Calling Dataset Loader & Schema Models (Gate A).
 
 Provides Pydantic models and helper utilities for loading, inspecting,
 and partitioning the Salesforce/xlam-function-calling-60k dataset.
