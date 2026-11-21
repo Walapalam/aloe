@@ -2,27 +2,27 @@
 
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/release/python-3120/)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Tests](https://img.shields.io/badge/tests-73%20passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-117%20passed-brightgreen.svg)]()
+[![Coverage](https://img.shields.io/badge/coverage-86%25-brightgreen.svg)]()
 [![Release](https://img.shields.io/badge/release-v0.1.0--alpha-orange.svg)]()
 
-**ALOE** is a research framework for **architecture-typed Low-Rank Adaptation (PEFT)** and multi-objective optimization across heterogeneous Small Language Models (<3B parameters) deployed on resource-constrained consumer hardware.
+**ALOE** (**A**rchitecture-aware **L**oRA **O**ptimisation **E**ngine) is a research framework for **architecture-typed, multi-objective LoRA optimisation** across heterogeneous Small Language Models (up to 3B effective parameters) for local agentic tool calling on a single GPU.
 
-Rather than applying uniform heuristic ranks across all Transformer and State Space Model (SSM) blocks, ALOE automatically inspects the underlying neural topology, assigns semantic layer roles (e.g., Attention, MLP, SSM Conv1D, SSM State Matrix, Gating), and derives architecture-specialized search spaces for parameter-efficient adaptation.
+Rather than applying uniform rank-8 LoRA across every layer, ALOE automatically inspects a model's module tree, groups adaptable linear projections into 3–4 functional layer types, excludes zero-gradient modules via a 1-step gradient probe, and searches per-type `(rank r, alpha α)` configurations within an equal `±5%` parameter budget (`qLogNEHVI`).
 
 ---
 
 ## Key Features
 
-- **Automated Architecture Inspection**: Introspects model weight graphs and classifies layers by mathematical functional role (`aloe inspect`).
-- **Heterogeneous Architecture Support**:
-  - Pure Transformer: **Gemma 4-E2B** (Multi-Head / Grouped Query Attention + MLP blocks).
-  - Hybrid SSM-Transformer: **Falcon-H1 1.5B** (Mamba-2 Structured State Space Duality + Attention + Convolutional projections).
-- **Architecture-Derived Search Grammars**: Maps layer semantics into bounded rank ($r \in [4, 64]$) and scaling factor ($\alpha \in [8, 128]$) dimensions (`aloe grammar`).
-- **Hardware-Tiered Metric Profiling**:
-  - Apple Silicon Unified Memory: Process RSS memory tracking via MPS backend (`ADR-005`, `ADR-015`).
-  - NVIDIA Cloud GPU: CUDA VRAM and compiled kernel acceleration for Mamba-2 chunk scanning (`ADR-012`).
-- **Compute Safety Trap**: Pre-flight zero-gradient verification using random orthogonal probes aborts invalid allocations in milliseconds before training begins (`ADR-004`).
-- **Tool-Disjoint Generalization**: Built-in split verification on function-calling benchmarks (xLAM-60k) ensuring $\text{Train} \cap \text{Val} = \emptyset$ across API names.
+- **Automated Layer Typing (`aloe inspect`)**: Introspects model module graphs on zero-RAM `meta` tensors and groups adaptable linear projections by functional role (`local_attention`, `global_attention`, `ssm`, `ffn`).
+- **Three Target Model Families**:
+  - **Gemma 4-E2B** (`google/gemma-4-E2B-it`): Interleaved local/global attention Transformer (`205` adaptable modules across 3 types).
+  - **Falcon-H1 1.5B** (`tiiuae/Falcon-H1-1.5B-Instruct`): Parallel Attention + Mamba-2 SSM hybrid (`192` adaptable modules across 3 types; `24` inert `conv1d` excluded).
+  - **LFM3-1.7B** (`LiquidAI/LFM3-1.7B`): Sequential ShortConv + local/global attention tri-hybrid (`142` adaptable modules across 4 types; `13` inert `ShortConv` excluded).
+- **1-Step Gradient Probe (`aloe probe`)**: Verifies non-zero gradient flow across role groups and blocks `GRADIENT_MISSING` custom-kernel bypasses before training.
+- **Equal `±5%` Budget Gate & Guided BO (`aloe search`)**: Analytically enforces `±5%` parameter parity against uniform rank-8 LoRA (`430` Falcon-H1, `550` Gemma 4, `11,375` LFM3 coupled states) and proposes candidate configs via BoTorch `qLogNEHVI`.
+- **4-Step AST/JSON Tool-Call Evaluator & Paired Bootstrap (`aloe evaluate`)**: Offline, non-executing structural verification (`Valid JSON → Tool Name → Argument Names → Argument Values`) and `10,000`-resample paired bootstrap 95% CIs.
+- **Reproducible Trial Runner (`aloe run`)**: Executes PEFT trials with `-100` answer-only prompt masking, `100 ms` peak RSS memory profiling, and fresh-subprocess reload verification.
 
 ---
 
@@ -76,32 +76,27 @@ uv sync
 
 ---
 
-## Quickstart & CLI Usage
+## Quickstart & 5-Command CLI Usage
 
-ALOE provides a unified command-line interface for architecture inspection, search grammar generation, and trial execution:
+ALOE provides five reproducible CLI commands (`inspect`, `probe`, `search`, `evaluate`, `run`):
 
-### 1. Inspect Model Architecture
 ```bash
-# Inspect Gemma 4-E2B layer topology
-uv run aloe inspect configs/gemma_baseline.json
+# 1. Inspect model layer groups & search space cardinality (0-RAM meta tensors)
+uv run aloe inspect google/gemma-4-E2B-it
+uv run aloe inspect tiiuae/Falcon-H1-1.5B-Instruct
+uv run aloe inspect LiquidAI/LFM3-1.7B
 
-# Inspect Falcon-H1 1.5B hybrid SSM topology
-uv run aloe inspect configs/falcon_baseline.json
-```
+# 2. Run 1-step autograd sanity check & inspect role-group gradient probe telemetry
+uv run aloe probe --model tiiuae/Falcon-H1-1.5B-Instruct
 
-### 2. Generate Architecture-Derived Search Grammar
-```bash
-uv run aloe grammar configs/gemma_baseline.json -o runs/grammars/gemma_grammar.json
-```
+# 3. Enumerate ±5% parameter-parity states & generate 20 guided BO trial configs
+uv run aloe search --model google/gemma-4-E2B-it --trials 20 --parity-tol 0.05
 
-### 3. Run Pre-Flight Gradient Verification
-```bash
-uv run python scripts/verify_gradients.py
-```
+# 4. Evaluate pilot tool-call outputs & compute paired bootstrap CIs
+uv run aloe evaluate --run-dir runs/pilot --bootstrap 10000
 
-### 4. Execute a QLoRA Smoke Training Trial
-```bash
-uv run python scripts/smoke_train.py
+# 5. Execute a single TrialConfig end to end
+uv run aloe run configs/falcon_baseline.json
 ```
 
 ---

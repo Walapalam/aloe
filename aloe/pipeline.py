@@ -30,7 +30,13 @@ def inspect_to_grammar(
     if backend == "auto":
         backend = "peft_mps"
 
-    reg = ModelRegistry(runs_models_dir)
+    runs_path = Path(runs_models_dir)
+    if not runs_path.is_dir():
+        pkg_runs = Path(__file__).resolve().parents[1] / "runs" / "models"
+        if pkg_runs.is_dir():
+            runs_path = pkg_runs
+
+    reg = ModelRegistry(runs_path)
     try:
         model_meta = reg.load_model_meta(model_id)
         config = reg.load_config(model_id)

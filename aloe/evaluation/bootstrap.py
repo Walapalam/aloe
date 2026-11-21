@@ -11,8 +11,11 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from statistics import NormalDist
 from typing import Literal, Mapping, Sequence
 import numpy as np
+
+_STD_NORM = NormalDist()
 
 
 @dataclass(frozen=True)
@@ -40,59 +43,14 @@ def _norm_cdf(x: float) -> float:
 
 
 def _norm_ppf(p: float) -> float:
-    """Standard normal percent point function (inverse CDF) using rational approximation."""
+    """Standard normal percent point function (exact inverse CDF)."""
     if p <= 0.0:
         return -8.0
     if p >= 1.0:
         return 8.0
     if p == 0.5:
         return 0.0
-
-    # Beasley-Springer-Moro approximation
-    q = p - 0.5
-    if abs(q) <= 0.42:
-        r = q * q
-        val = (
-            q
-            * (
-                (
-                    (-25.44106049637 * r + 41.39119773534) * r
-                    - 18.61500062529
-                )
-                * r
-                + 2.50662823884
-            )
-            / (
-                (
-                    ((3.13082909833 * r - 21.06224101826) * r + 23.08336743743)
-                    * r
-                    - 8.47351093090
-                )
-                * r
-                + 1.0
-            )
-        )
-        return val
-
-    r = p if q < 0.0 else 1.0 - p
-    r = math.log(-math.log(r))
-    val = 0.322232431088 + r * (
-        1.0
-        + r
-        * (
-            0.342242088547
-            + r * (0.0204231210245 + r * 0.0000453642210148)
-        )
-    )
-    val /= (
-        0.0993484626060
-        + r
-        * (
-            0.588581570495
-            + r * (0.531103462366 + r * (0.103537752850 + r * 0.0038560700634))
-        )
-    )
-    return -val if q < 0.0 else val
+    return float(_STD_NORM.inv_cdf(p))
 
 
 def paired_bootstrap(

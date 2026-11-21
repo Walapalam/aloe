@@ -79,6 +79,13 @@ class ModelRegistry:
         "model_c": "LiquidAI/LFM3-1.7B",
     }
 
+    PINNED_REVISIONS: ClassVar[dict[str, str]] = {
+        "google/gemma-4-E2B-it": "3e22461f65e89153144f8adb70e3b8c2cc9845a7",
+        "google/gemma-4-E4B-it": "ee0ef6023621cff504d758262d4e04895a5af4a2",
+        "tiiuae/Falcon-H1-1.5B-Instruct": "80ebc50d7799a440b96c93bb6686a3924a09b0cb",
+        "LiquidAI/LFM3-1.7B": "40ebe0aa6662c9d40389c2f5d565b6a2c6aebacd",
+    }
+
     def __init__(self, runs_dir: Path | str = "runs/models") -> None:
         self.runs_dir = Path(runs_dir)
         self._records: dict[str, ModelAcquisitionRecord] = {}
@@ -188,6 +195,10 @@ class ModelRegistry:
         from transformers import AutoConfig
 
         self._ensure_lfm3_rope_compat()
+        if isinstance(model_id_or_path, str) and not Path(model_id_or_path).exists() and "revision" not in kwargs:
+            rev = self.PINNED_REVISIONS.get(model_id_or_path)
+            if rev:
+                kwargs["revision"] = rev
         return AutoConfig.from_pretrained(model_id_or_path, trust_remote_code=True, **kwargs)
 
     def load_tokenizer(self, model_id_or_slug: str, **kwargs: Any) -> Any:
