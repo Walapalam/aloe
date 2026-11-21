@@ -5,7 +5,7 @@ Do the push **before** you start moving anything else.
 ## On the old machine
 
 ```bash
-cd /Users/walapalam/Development/fyp/aloe
+cd <path-to-aloe-repo>
 git init
 git add .
 git commit -m "ALOE Core v0.1 scaffold: schema, inspector, grammar, ADRs"

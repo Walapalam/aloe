@@ -5,7 +5,7 @@
 **Presenter:** Student / Engineering Lead  
 **Target Audience:** Academic Supervisor & FYP Examination Panel  
 **Time Limit:** Exactly 10 minutes (600 seconds)  
-**Prerequisites:** Apple Silicon Mac terminal open in repository root (`/Users/walapalam/Development/fyp`).
+**Prerequisites:** Apple Silicon Mac terminal open in repository root (`aloe/`).
 
 ---
 

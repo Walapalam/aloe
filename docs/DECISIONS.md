@@ -228,7 +228,7 @@ On Apple Silicon, `peak_memory_gb` is formally defined as **peak process residen
 
 ## ADR-015 · Cloud GPU Hardware Tier for Mamba-2 Hybrid Acceleration (GCP NVIDIA L4 Offload)
 
-**Date:** 2026-09-18 · **Status:** Accepted · **Amends and extends ADR-012 local MPS constraints**
+**Date:** 2026-09-18 · **Status:** Accepted (Cloud GPU SKU updated by ADR-017) · **Amends and extends ADR-012 local MPS constraints**
 
 **Context.** `tiiuae/Falcon-H1-1.5B-Instruct` incorporates 7 Mamba-2 Structured State Space (SSM) layers. On Apple Silicon MPS, Mamba-2 SSM chunk scans fall back to sequential PyTorch reference operations, producing ~10× higher step latency (6,918 ms/step vs ~713 ms/step on `google/gemma-4-E2B-it`). Running a standard 30–50 trial search campaign on a single M1 Max workstation would consume ~29+ hours, creating a critical bottleneck. Meanwhile, the project holds $1,636 in Google Cloud startup credits. An NVIDIA L4 GPU instance (`g2-standard-4`, 24GB GDDR6 VRAM, Ada Lovelace `sm_89`) provides hardware-accelerated chunked scans via compiled `mamba-ssm` and `causal-conv1d` CUDA kernels at ~$0.28/hr on Spot.
 
@@ -261,7 +261,7 @@ On Apple Silicon, `peak_memory_gb` is formally defined as **peak process residen
 ---
 
 ## ADR-016 · 3-Objective Formulation (Tool Accuracy, Trainable Parameters, Peak Process RSS) & Random Search Baseline
-**Date:** 2026-09-28 · **Status:** Accepted · **Supersedes ADR-013**
+**Date:** 2026-09-28 · **Status:** Accepted (Amended by ADR-018) · **Supersedes ADR-013**
 
 **Context.**
 1. ADR-013 specified multi-objective optimization using SAAS-GP and qLogNEHVI over objectives loosely defined as "task error rate, peak memory, trial latency". It contained a conceptual tension: describing the search space as $D=6$ (low-dimensional for Gemma 4's three component groups) while simultaneously invoking SAAS-GP, which is specifically designed for high-dimensional regimes ($D \ge 50$).
@@ -287,4 +287,54 @@ On Apple Silicon, `peak_memory_gb` is formally defined as **peak process residen
 - Provides a clean, mathematically sound Pareto front for examiner viva defense.
 
 
+
+
+
+---
+
+## ADR-017 · Colab Pro+ NVIDIA A100 SKU Pinning & Persistent Drive Resume for Hybrid Tier
+**Date:** 2026-11-21 · **Status:** Accepted · **Amends ADR-015 Cloud GPU Tier (L4 → Pinned A100)**
+
+**Context.** ADR-015 selected Spot GCP NVIDIA L4 (`g2-standard-4`, 24 GB) when cloud execution drew from billed startup credits, and expanded hybrid evaluation to include both `tiiuae/Falcon-H1-1.5B-Instruct` (Mamba-2 + Attention) and `LiquidAI/LFM3-1.7B` (ShortConv + Local/Global Attention). In November 2026, 2,000 prepaid Google Colab Pro+ compute units (~260–300 NVIDIA A100 GPU-hours expiring 30 Nov 2026) became available at zero incremental cost. On `NVIDIA A100-SXM4-40GB` (1,555 GB/s HBM2e), compiled `mamba_ssm` and `causal_conv1d` kernels complete full 20-trial search + 3-seed confirmation campaigns ~2.5–3× faster than L4 while maintaining native `bfloat16` arithmetic.
+
+**Decision.**
+1. **Exact GPU SKU Locking:** Assign both hybrid models (`Falcon-H1-1.5B-Instruct` and `LiquidAI/LFM3-1.7B`) to a single pinned CUDA GPU SKU (`pinned_gpu="A100"`), recording the exact first-trial `gpu_name` (e.g., `NVIDIA A100-SXM4-40GB`) in `CampaignLedgerState.locked_gpu_name` and rejecting any resume or worker invocation on a different GPU variant (e.g., 80GB or L4). Local-tier `google/gemma-4-E2B-it` remains strictly on Apple Silicon MPS (`process_rss_sampled_100ms`), and `run_colab_a100_campaign.py` refuses Gemma on CUDA.
+2. **Fail-Closed Fast Hybrid Kernels:** Official CUDA campaigns require `mamba_ssm` + `causal_conv1d` for Falcon-H1 and `causal_conv1d` for LFM3 (`enforce_hardware_contract`), caching wheels in ABI-keyed Google Drive folders (`wheels_cache/py<ver>_torch<ver>_cu<ver>/`).
+3. **Atomic Fsync & Incremental Drive Mirroring:** Every `CampaignLedger` save, 25-step `weights_only=True` training checkpoint (`checkpoint_state.pt`), incremental `predictions_*.jsonl` append, and `trial.json` envelope uses `NamedTemporaryFile + flush + os.fsync + os.replace + dir_fsync` and mirrors immediately to Google Drive (`/content/drive/MyDrive/aloe_ipd_v1`), restoring mid-trial checkpoints and partial predictions automatically after session preemption.
+
+**Why.** Eliminates out-of-pocket GCP spend during IPD execution, cuts hybrid campaign wall-clock time by ~65%, and guarantees zero lost completed steps or evaluation samples under Colab VM preemption.
+
+**Cost.** Requires Google Drive mount latency (~10–30 ms per mirrored checkpoint/prediction flush) and strict single-SKU discipline (`locked_gpu_name`).
+
+**Overturned if.** Prepaid Colab A100 quota is exhausted before campaign completion — in which case any *new* model campaign reverts to a dedicated GCP L4 Spot instance (`ADR-015`), never mixing L4 and A100 trials inside the same model campaign.
+
+---
+
+## ADR-018 · Protocol-v1 Amendments: Sobol-Nadir Hypervolume Calibration, Tier-Specific Memory Objective, & Step-Down Holm-Bonferroni
+**Date:** 2026-11-21 · **Status:** Accepted · **Amends ADR-014 and ADR-016**
+
+**Context.** Post-Proposal static verification identified three mathematical alignment requirements before launching full IPD compute:
+1. *Hypervolume Reference-Point Scaling (`ADR-016`):* Under a static uncalibrated reference point $\vec{r} = [0, -10^8, -40{,}000]$, variations inside the $\pm 5\%$ parameter parity band ($\Delta N \approx 0.6\text{M}$ against $10^8$) and memory deltas ($\Delta M \approx 150\text{ MB}$ against $40{,}000\text{ MB}$) change those box edges by $<1\%$, collapsing 3-D hypervolume into near-1-D accuracy ranking.
+2. *Tier-Specific Memory Objective (`ADR-012` / `ADR-016`):* `ADR-016` wrote $f_3$ solely as $M_{\text{RSS}}$, whereas hybrid CUDA campaigns optimize peak CUDA allocator VRAM (`cuda_max_memory_allocated`).
+3. *Single Multiplicity Rule (`ADR-014`):* Step-down Holm-Bonferroni uniformly dominates classical single-step Bonferroni in statistical power while controlling the identical family-wise error rate ($\text{FWER} \le \alpha = 0.05$).
+
+**Decision.**
+1. **Sobol-Nadir Dynamic Reference Point (`MOBOptimizer`):** In maximization coordinates $\vec{y} = [\text{Acc}_{\text{exact}}, -N_{\text{params}}, -M_{\text{tier}}]$, after observing the initial $n_{\text{init}} = 5$ scrambled-Sobol trials $Y_{1:5} \in \mathbb{R}^{5 \times 3}$, lock the reference point once for the campaign (persisted in `CampaignLedgerState.optimizer_state`) as:
+   $$r_k = \min_{1 \le i \le 5} Y_{i,k} - 0.15 \cdot \max\!\left(\max_{1 \le i \le 5} Y_{i,k} - \min_{1 \le i \le 5} Y_{i,k},\; s_k^{\min}\right), \quad k \in \{1, 2, 3\}$$
+   where $\vec{s}^{\min} = \max(0.02 |\vec{y}_{\min}|, [0.05, 1000, 50])$. Retained $N_{\text{params}}$ within the $\pm 5\%$ band rewards leaner Pareto-optimal adapters when accuracy ties occur without permitting budget confounding.
+2. **Tier-Isolated Memory Objective ($f_3$):** Define $f_3(\vec{x}) = M_{\text{RSS}}$ (`process_rss_sampled_100ms`, MB) on Apple Silicon MPS and $f_3(\vec{x}) = M_{\text{VRAM}}$ (`cuda_max_memory_allocated`, MB) on CUDA, recorded in `locked_memory_metric_name` and never pooled across tiers (`aloe evaluate` aborts on mixed `memory_metric_name` or `gpu_name`).
+3. **Pre-Registered Inferential Protocol (Amending `ADR-014`):**
+   - Primary metric: strict multi-call AST `exact_match_accuracy` (`v2.0.0-strict`).
+   - Uncertainty: $B = 10{,}000$ paired query bootstrap (`BCa` 95% CI, conditional on the fixed 3-seed set $\{42, 1337, 2026\}$ required by `--final`) plus exact two-sided binomial McNemar test on odd-seed majority-vote query outcomes.
+   - Multiplicity: Step-down **Holm-Bonferroni** ($\alpha = 0.05$, rejecting while $p^{\text{Holm}}_{(i)} \le \alpha$ and halting at the first $p^{\text{Holm}}_{(k)} > \alpha$) supersedes single-step Bonferroni across the pre-declared comparator family (`B0`, `B1`, `B2`, `Borobia-*`).
+
+**Dual-Scale Mathematical Verification.**
+- *Scale-Down (A-Level Worked Numeric Example):* Suppose 5 initial Sobol trials achieve accuracies $[0.50, 0.60]$, negative parameters $[-12.4\text{M}, -11.6\text{M}]$ (span $0.8\text{M}$), and negative memory $[-8200, -8000]\text{ MB}$ (span $200\text{ MB}$). The Sobol-calibrated reference point is $\vec{r} = [0.50 - 0.15(0.10),\; -12.4\text{M} - 0.15(0.8\text{M}),\; -8200 - 0.15(200)] = [0.485,\; -12.52\text{M},\; -8230]$. A candidate improving memory from $8100\text{ MB}$ to $8000\text{ MB}$ at $\text{Acc}=0.60, N=12.0\text{M}$ expands the 3-D box edge $(-8000 - (-8230)) / (-8100 - (-8230)) = 230 / 130 = \mathbf{1.77\times}$ (+77% hypervolume gain!), whereas an uncalibrated $-40{,}000$ reference gave $32{,}000 / 31{,}900 = 1.003\times$ (+0.3%). Similarly, for $m=3$ baseline comparisons with sorted raw p-values $p_{(1)}=0.012, p_{(2)}=0.020, p_{(3)}=0.040$, Holm adjusted values are $p^{\text{Holm}}_{(1)} = 3(0.012) = 0.036 \le 0.05$ (**Reject**), $p^{\text{Holm}}_{(2)} = \max(0.036, 2 \times 0.020) = 0.040 \le 0.05$ (**Reject**), and $p^{\text{Holm}}_{(3)} = \max(0.040, 1 \times 0.040) = 0.040 \le 0.05$ (**Reject**), whereas conservative Bonferroni ($3 \times 0.020 = 0.060 > 0.05$) would have missed the second and third discoveries.
+- *Scale-Up (Exact Shape-Sum & Discrete $q\text{LogNEHVI}$):* For architecture modules $m \in \mathcal{M}_g$ of functional role $g \in \mathcal{G}$ with weight shape $(d_{\text{out},m}, d_{\text{in},m})$, exact trainable parameter count is $N_{\text{params}}(\vec{r}) = \sum_{g \in \mathcal{G}} \mathbb{I}[e_g] \, r_g \sum_{m \in \mathcal{M}_g} (d_{\text{in},m} + d_{\text{out},m})$, constrained to $\mathcal{F}_{0.05} = \{(\vec{e}, \vec{r}, \vec{\alpha}, \eta) : |N_{\text{params}}(\vec{r}) - N_{\text{base}}| / N_{\text{base}} \le 0.05\}$. Independent Matérn-5/2 ARD Gaussian Processes model $f_1, -f_2, -f_3$, and sequential acquisition maximizes $\alpha_{q\text{LogNEHVI}}(\vec{x}) = \log \mathbb{E}_{p(\vec{f} \mid \mathcal{D}_t)}[\text{HVI}(\vec{f}(\vec{x}) \mid \mathcal{P}_t, \vec{r})]$ directly over $\vec{x} \in \mathcal{F}_{0.05} \setminus \mathcal{D}_t$ via `optimize_acqf_discrete` (evaluated in exact $2{,}048$-point chunks when $|\mathcal{F}_{0.05}| > 2{,}048$).
+
+**Why.** Restores true 3-objective Pareto sensitivity inside the $\pm 5\%$ parity band, formalizes MPS-vs-CUDA memory objective semantics, and unifies statistical multiplicity under pre-registered Holm-Bonferroni.
+
+**Cost.** Requires completing $n_{\text{init}} = 5$ Sobol observations before locking $\vec{r}$, and requires $\ge 3$ identical seeds (`--final`) for locked test inference.
+
+**Overturned if.** Sobol initial points all fail before $n_{\text{init}}$ observations complete — prevented by `CampaignRunner`'s fail-closed `max_attempts_per_trial` abort.
 

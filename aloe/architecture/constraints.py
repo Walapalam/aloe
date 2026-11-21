@@ -25,9 +25,10 @@ KNOWN_EXCLUSIONS: dict[str, list[tuple[str, Validity, str]]] = {
          "requires r % groups == 0 under PEFT, cannot be merged, and is bypassed via direct "
          "self.conv.weight.squeeze(1) access in _segmented_conv / causal_conv1d_fn kernels."),
         ("self_attn.gate_proj", Validity.EXCLUDED,
-         "Per-head scalar sigmoid attention gate (shape [16, 2048], out_features=num_attention_heads=16); "
-         "rank r>=16 exceeds full matrix rank min(d_in, d_out)=16 and leaf name 'gate_proj' "
-         "collides with standard SwiGLU FFN naming."),
+         "Scope & rank-efficiency exclusion (distinct from zero-gradient kernel bypass): "
+         "per-head scalar sigmoid attention gate (shape [16, 2048], min(d_in, d_out)=16), "
+         "where r=16 equals full matrix rank, r=32 strictly exceeds it (overparameterized vs "
+         "direct fine-tuning), and leaf name 'gate_proj' collides with SwiGLU FFN naming."),
     ],
 }
 

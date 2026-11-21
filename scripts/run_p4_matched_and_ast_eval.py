@@ -124,12 +124,6 @@ def evaluate_model_or_adapter_ast(
 
 def main() -> None:
     repo_dir = Path(__file__).resolve().parent.parent
-    # Detect sibling repo if syncing between working and public clones
-    alt_dir = (
-        Path("/Users/walapalam/Development/aloe")
-        if repo_dir.name == "aloe" and repo_dir.parent.name == "fyp"
-        else Path("/Users/walapalam/Development/fyp/aloe")
-    )
     runs_dir = repo_dir / "runs" / "pilot"
     device = "mps" if torch.backends.mps.is_available() else "cpu"
 
@@ -369,16 +363,7 @@ def main() -> None:
             trial_record_path = runs_dir / slug / trial_folder / "trial.json"
             trial_record_path.write_text(envelope.to_json(), encoding="utf-8")
 
-            if alt_dir.is_dir():
-                pub_cfg_dir = alt_dir / "runs" / "pilot" / slug / cfg_id
-                pub_cfg_dir.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(record_path, pub_cfg_dir / "trial.json")
-
-                pub_trial_dir = alt_dir / "runs" / "pilot" / slug / trial_folder
-                pub_trial_dir.mkdir(parents=True, exist_ok=True)
-                shutil.copy2(record_path, pub_trial_dir / "trial.json")
-
-    logger.info("All budget-matched trials and AST evaluations completed and synced!")
+    logger.info("All budget-matched trials and AST evaluations completed!")
 
 
 if __name__ == "__main__":

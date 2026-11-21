@@ -78,15 +78,23 @@ def test_cli_inspect_and_search(tmp_path: Path) -> None:
 
 
 def test_cli_evaluate_and_run_errors(tmp_path: Path) -> None:
-    """Verify evaluate CLI computes AST metrics and paired bootstrap CIs on pilot trials."""
-    res_eval = runner.invoke(
+    """Verify evaluate CLI guards sealed test split and runs real paired JSONL bootstrap + Holm."""
+    # 1. Sealed test split without --final must be rejected
+    res_sealed = runner.invoke(
         app,
-        ["evaluate", "--run-dir", "runs/pilot", "--split", "test", "--bootstrap", "500"],
+        ["evaluate", "--run-dir", "runs/pilot", "--split", "test"],
     )
-    assert res_eval.exit_code == 0, res_eval.output
-    assert "google/gemma-4-E2B-it" in res_eval.output
-    assert "tiiuae/Falcon-H1-1.5B-Instruct" in res_eval.output
-    assert "BOOTSTRAP P4_SSM_Matched vs P1" in res_eval.output
+    assert res_sealed.exit_code == 1
+    assert "sealed" in res_sealed.output.lower()
+
+    # 2. Legacy pilot directory without JSONL refuses fabricated pairing honestly
+    res_legacy = runner.invoke(
+        app,
+        ["evaluate", "--run-dir", "runs/pilot", "--split", "validation", "--bootstrap", "200"],
+    )
+    assert res_legacy.exit_code == 0, res_legacy.output
+    assert "google/gemma-4-E2B-it" in res_legacy.output
+    assert "refusing fabricated" in res_legacy.output.lower()
 
     res_missing = runner.invoke(app, ["evaluate", "--run-dir", str(tmp_path / "empty")])
     assert res_missing.exit_code == 1

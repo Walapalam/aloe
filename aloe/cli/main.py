@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import itertools
 import json
 from pathlib import Path
 from typing import Any
@@ -34,9 +33,7 @@ def _run_kernel_autograd_sanity_check() -> dict[str, Any]:
     conv_lora_b = nn.Parameter(torch.randn(32, 4) * 0.02)
 
     x = torch.randn(2, 8, 32)
-    # Standard Linear + LoRA forward path
     lin_out = lin(x) + (x @ lora_a.t() @ lora_b.t()) * 2.0
-    # Custom kernel path accessing raw conv.weight directly (bypassing conv_lora_a/b)
     conv_raw_out = nn.functional.conv1d(
         lin_out.transpose(1, 2), conv.weight, groups=32, padding=3
     )[:, :, :8].transpose(1, 2)
@@ -44,8 +41,12 @@ def _run_kernel_autograd_sanity_check() -> dict[str, Any]:
     loss.backward()
 
     return {
-        "linear_lora_grad_ok": bool(lora_a.grad is not None and lora_b.grad is not None and lora_b.grad.norm().item() > 0),
-        "conv_raw_weight_lora_grad_missing": bool(conv_lora_a.grad is None and conv_lora_b.grad is None),
+        "linear_lora_grad_ok": bool(
+            lora_a.grad is not None and lora_b.grad is not None and lora_b.grad.norm().item() > 0
+        ),
+        "conv_raw_weight_lora_grad_missing": bool(
+            conv_lora_a.grad is None and conv_lora_b.grad is None
+        ),
     }
 
 
@@ -63,36 +64,58 @@ def inspect(model_id: str, backend: str = "auto", out: str = "") -> None:
         rprint(f"  {g.component_type.value:18s} {len(g.targets):4d} targets")
     rprint(f"  excluded: {len(grammar.excluded)}  |  grammar size: {grammar.cardinality():,}")
     if out:
-        with open(out, "w", encoding="utf-8") as f:
-            json.dump(grammar.model_dump(mode="json"), f, indent=2)
+        out_path = Path(out)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(json.dumps(grammar.model_dump(mode="json"), indent=2), encoding="utf-8")
 
 
 @app.command()
-def run(config: str, trials_dir: str = "runs/trials") -> None:
-    """Execute one TrialConfig end to end."""
+def run(
+    config: str,
+    trials_dir: str = "runs/trials",
+    eval_split: str = "validation",
+    enforce_parity: bool = True,
+    parity_tol: float = 0.05,
+    pinned_gpu: str = "",
+) -> None:
+    """Execute one TrialConfig end to end (with pre-load parity gate and held-out AST evaluation)."""
     from aloe.execution.backends.peft_mps import PeftMPSBackend  # noqa: PLC0415
     from aloe.execution.trial_config import TrialConfig  # noqa: PLC0415
+    from aloe.pipeline import inspect_to_grammar  # noqa: PLC0415
 
     config_path = Path(config)
     if not config_path.is_file():
         rprint(f"[red]Error:[/] Config file not found: {config}")
         raise typer.Exit(code=1)
 
-    with open(config_path, encoding="utf-8") as f:
-        data = json.load(f)
-
-    trial_config = TrialConfig.model_validate(data)
+    trial_config = TrialConfig.from_file(config_path)
+    desc, grammar = inspect_to_grammar(trial_config.model_id, backend=trial_config.backend)
     rprint(f"[bold green]Loaded TrialConfig:[/] {trial_config.trial_id} on model {trial_config.model_id}")
 
     backend_inst = PeftMPSBackend()
     if not backend_inst.available():
-        rprint("[yellow]Warning:[/] MPS backend not available, executing on CPU.")
+        rprint("[yellow]Warning:[/] Accelerator backend not available, executing on CPU.")
 
-    envelope = backend_inst.run_trial(trial_config, runs_trials_dir=trials_dir)
+    envelope = backend_inst.run_trial(
+        trial_config,
+        runs_trials_dir=trials_dir,
+        grammar=grammar,
+        arch=desc,
+        enforce_budget_parity=enforce_parity,
+        parity_tolerance=parity_tol,
+        eval_split=eval_split if eval_split.lower() != "none" else None,
+        pinned_gpu=pinned_gpu or None,
+    )
+    assert envelope.metrics is not None
+    acc_str = (
+        f"exact_match={envelope.metrics.ast_exact_match_accuracy:.1%} "
+        if envelope.metrics.ast_exact_match_accuracy is not None
+        else ""
+    )
     rprint(
-        f"[bold green]Trial Completed:[/] status={envelope.status} "
+        f"[bold green]Trial Completed:[/] status={envelope.status} {acc_str}"
         f"train_time={envelope.metrics.train_seconds}s "
-        f"peak_rss={envelope.metrics.peak_rss_gb * 1024:.1f}MB"
+        f"peak_mem={envelope.metrics.peak_memory_gb:.2f}GB ({envelope.metrics.memory_metric_name})"
     )
 
 
@@ -194,118 +217,107 @@ def compute_parity_space(
     grammar: Any,
     parity_tol: float = 0.05,
 ) -> dict[str, Any]:
-    """Enumerate exact parameter-parity rank vectors and coupled (r, alpha) states."""
-    from aloe.execution.trial_config import GroupTrialSetting, TrialConfig  # noqa: PLC0415
-
-    role_names = [g.component_type.value for g in grammar.groups]
-    p1_settings = {
-        rname: GroupTrialSetting(enabled=True, rank=8, alpha=16)
-        for rname in role_names
-    }
-    p1_cfg = TrialConfig(trial_id="baseline_uniform_r8", model_id=desc.model_id, group_settings=p1_settings)
-    baseline_params = p1_cfg.compute_trainable_params(desc, grammar)
-
-    rank_choices = [0, 4, 8, 16, 32]
-    alpha_choices = [8, 16, 32, 64, 128]
-    parity_rank_vectors: list[dict[str, int]] = []
-    coupled_states_count = 0
-    feasible_configs: list[dict[str, GroupTrialSetting]] = []
-
-    for r_tuple in itertools.product(rank_choices, repeat=len(role_names)):
-        if all(r == 0 for r in r_tuple):
-            continue
-        gs = {
-            rname: GroupTrialSetting(enabled=(r > 0), rank=(r if r > 0 else 4), alpha=16)
-            for rname, r in zip(role_names, r_tuple)
-        }
-        cand_cfg = TrialConfig(trial_id="cand", model_id=desc.model_id, group_settings=gs)
-        cand_params = cand_cfg.compute_trainable_params(desc, grammar)
-        rel_delta = abs(cand_params - baseline_params) / baseline_params
-        if rel_delta <= parity_tol:
-            parity_rank_vectors.append(dict(zip(role_names, r_tuple)))
-            active_roles = sum(1 for r in r_tuple if r > 0)
-            coupled_states_count += len(alpha_choices) ** active_roles
-            # Add canonical alpha=2*r and alpha=r variants to feasible pool
-            for alpha_mult in (1, 2, 4):
-                gs_alpha = {
-                    rname: GroupTrialSetting(
-                        enabled=(r > 0),
-                        rank=(r if r > 0 else 4),
-                        alpha=min(128, max(8, (r if r > 0 else 4) * alpha_mult)),
-                    )
-                    for rname, r in zip(role_names, r_tuple)
-                }
-                feasible_configs.append(gs_alpha)
-
-    return {
-        "baseline_params": baseline_params,
-        "parity_rank_vectors": len(parity_rank_vectors),
-        "coupled_states": coupled_states_count,
-        "rank_vectors": parity_rank_vectors,
-        "feasible_configs": feasible_configs,
-    }
+    """Enumerate exact parameter-parity rank vectors and all coupled (r, alpha) states."""
+    from aloe.execution.campaign_runner import compute_exact_feasible_pool  # noqa: PLC0415
+    return compute_exact_feasible_pool(desc, grammar, parity_tol=parity_tol)
 
 
 @app.command()
 def search(
     model: str = "google/gemma-4-E2B-it",
+    arm: str = "aloe",
     trials: int = 20,
     parity_tol: float = 0.05,
     seed: int = 42,
+    training_seed: int = 42,
     backend: str = "auto",
+    manifest: str = "data/manifests/xlam_ipd_v1.json",
+    raw_data: str = "data/raw/xlam/xlam_function_calling_60k.json",
+    max_steps: int = 125,
+    execute: bool = False,
+    pinned_gpu: str = "",
+    drive_sync_dir: str = "",
+    allow_slow_kernels: bool = False,
     out: str = "",
 ) -> None:
-    """Build role-typed search space, enumerate ±5% parity states, and generate MOBO trial configs."""
-    from aloe.execution.trial_config import TrialConfig  # noqa: PLC0415
+    """Run (with --execute) or inspect role-typed ±5% parity search & baseline campaigns."""
+    from aloe.execution.campaign_runner import CampaignRunner  # noqa: PLC0415
+    from aloe.execution.trial_config import TrainingParameters, TrialConfig  # noqa: PLC0415
     from aloe.optimization.bo_adapter import BOSearchAdapter  # noqa: PLC0415
-    from aloe.optimization.mobo import MOBOptimizer  # noqa: PLC0415
     from aloe.pipeline import inspect_to_grammar  # noqa: PLC0415
+    from aloe.tracking.trial_store import atomic_write_text  # noqa: PLC0415
 
     desc, grammar = inspect_to_grammar(model, backend)
     parity_info = compute_parity_space(desc, grammar, parity_tol=parity_tol)
-
-    adapter = BOSearchAdapter(grammar)
-    optimizer = MOBOptimizer(adapter, seed=seed, n_init=min(6, max(1, trials)), allow_fallback=True)
-
     slug = desc.model_id.replace("/", "--")
-    out_dir = Path(out) if out else _resolve_runs_dir("runs") / "search" / slug
+    out_dir = Path(out) if out else _resolve_runs_dir("runs") / "search" / f"{slug}_{arm}"
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    generated: list[TrialConfig] = []
-    feasible_pool = parity_info["feasible_configs"]
-    for idx in range(trials):
-        cand = optimizer.suggest(q=1)[0]
-        # Snap to ±parity_tol feasible configuration if outside budget
-        cand_params = cand.compute_trainable_params(desc, grammar)
-        rel_delta = abs(cand_params - parity_info["baseline_params"]) / parity_info["baseline_params"]
-        if rel_delta > parity_tol and feasible_pool:
-            chosen_gs = feasible_pool[idx % len(feasible_pool)]
-            cand = TrialConfig(
-                trial_id=f"trial_mobo_{idx:04d}",
-                model_id=desc.model_id,
-                seed=seed + idx,
-                dataset_manifest_path=cand.dataset_manifest_path,
-                dataset_raw_path=cand.dataset_raw_path,
-                group_settings=chosen_gs,
-            )
-            cand_params = cand.compute_trainable_params(desc, grammar)
-
-        # Provide surrogate observation to advance MOBO state
-        optimizer.observe(
-            cand,
-            {
-                "tool_accuracy": 0.75 + 0.01 * ((idx % 5) - 2),
-                "trainable_parameters": float(cand_params),
-                "peak_process_rss_mb": 4500.0 + float(idx * 5),
-            },
+    if execute:
+        base_tp = TrainingParameters(max_steps=max_steps)
+        runner_inst = CampaignRunner(
+            arch=desc,
+            grammar=grammar,
+            campaign_dir=out_dir,
+            arm=arm,
+            target_trials=trials,
+            search_seed=seed,
+            training_seed=training_seed,
+            parity_tol=parity_tol,
+            manifest_path=manifest,
+            raw_path=raw_data,
+            base_training=base_tp,
+            pinned_gpu=pinned_gpu or None,
+            official_campaign=True,
+            allow_slow_kernels=allow_slow_kernels,
+            mirror_dir=drive_sync_dir or None,
         )
-        generated.append(cand)
-        (out_dir / f"{cand.trial_id}.json").write_text(
-            json.dumps(cand.model_dump(mode="json"), indent=2),
-            encoding="utf-8",
+        summary = runner_inst.run_campaign()
+        print(
+            f"[ALOE CAMPAIGN COMPLETE] model={desc.model_id} arm={arm} "
+            f"completed={summary['completed_trials']}/{summary['target_trials']} "
+            f"winner={summary['selected_winner_trial_id']} "
+            f"acc={summary['selected_winner_metrics']['tool_accuracy']:.1%} -> {out_dir}"
+        )
+        return
+
+    # Plan-only mode (default when --execute is omitted): emits exact Sobol initial design
+    # WITHOUT fabricating fake accuracy/memory observations or claiming an empirical Pareto front.
+    adapter = BOSearchAdapter(
+        grammar=grammar,
+        arch=desc,
+        feasible_configs=parity_info["feasible_configs"],
+        dataset_manifest_path=manifest,
+        dataset_raw_path=raw_data,
+    )
+    sobol_pairs = adapter.generate_sobol_sample(n_samples=trials, seed=seed)
+    generated: list[TrialConfig] = []
+    for idx, (gs, _) in enumerate(sobol_pairs):
+        cfg = TrialConfig(
+            trial_id=f"trial_mobo_{idx:04d}",
+            arm=arm,
+            model_id=desc.model_id,
+            seed=training_seed,
+            dataset_manifest_path=manifest,
+            dataset_raw_path=raw_data,
+            group_settings=gs,
+        )
+        cfg.validate_parameter_budget_parity(
+            arch=desc,
+            baseline_params=parity_info["baseline_params"],
+            tolerance=parity_tol,
+            grammar=grammar,
+            enforce=True,
+        )
+        generated.append(cfg)
+        atomic_write_text(
+            out_dir / f"{cfg.trial_id}.json",
+            json.dumps(cfg.model_dump(mode="json"), indent=2),
         )
 
     summary = {
+        "mode": "plan_only_unexecuted",
+        "note": "Pass --execute to run real training + held-out validation AST scoring.",
         "model_id": desc.model_id,
         "roles": len(grammar.groups),
         "unconstrained_cardinality": grammar.cardinality(),
@@ -314,10 +326,10 @@ def search(
         "parity_rank_vectors": parity_info["parity_rank_vectors"],
         "parity_coupled_states": parity_info["coupled_states"],
         "trials_generated": len(generated),
-        "optimizer_impl": optimizer.impl,
+        "initial_design": "scrambled_sobol_discrete_feasible",
         "output_dir": str(out_dir),
     }
-    (out_dir / "search_summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+    atomic_write_text(out_dir / "search_summary.json", json.dumps(summary, indent=2))
 
     print(
         f"[ALOE] Search Space & Parity Gate: model={desc.model_id} "
@@ -329,20 +341,34 @@ def search(
         f"({parity_info['coupled_states']:,} coupled states)"
     )
     print(
-        f"[MOBO] Generated {len(generated)}/{trials} parity-feasible TrialConfigs "
-        f"(impl={optimizer.impl}, seed={seed}) -> {out_dir}"
+        f"[PLAN-ONLY] Generated {len(generated)}/{trials} unique Sobol parity-feasible TrialConfigs "
+        f"(pass --execute for real BO training/eval) -> {out_dir}"
     )
 
 
 @app.command()
 def evaluate(
     run_dir: str = "runs/pilot",
-    split: str = "test",
+    split: str = "validation",
+    baseline_arm: str = "b0",
     bootstrap: int = 10000,
     seed: int = 42,
+    final: bool = False,
+    min_seeds: int = 0,
 ) -> None:
-    """Compute AST tool-call evaluation metrics and paired bootstrap confidence intervals."""
-    from aloe.evaluation.bootstrap import paired_bootstrap  # noqa: PLC0415
+    """Compute strict AST metrics, paired bootstrap CIs, McNemar, and Holm-Bonferroni from saved JSONL predictions."""
+    from aloe.evaluation.bootstrap import holm_bonferroni, mcnemar_exact, paired_bootstrap  # noqa: PLC0415
+    from aloe.evaluation.prediction_store import PredictionStore, build_paired_outcome_matrix  # noqa: PLC0415
+    from aloe.execution.trial_config import TrialConfig  # noqa: PLC0415
+
+    if split == "test" and not final:
+        rprint(
+            "[red]Error:[/] Split 'test' is sealed during search/development. "
+            "Pass --final only after locking validation-selected winner configurations."
+        )
+        raise typer.Exit(code=1)
+
+    required_seeds = min_seeds if min_seeds > 0 else (3 if final else 1)
 
     p = _resolve_runs_dir(run_dir)
     json_files = sorted(p.rglob("trial.json")) if p.exists() else []
@@ -350,49 +376,169 @@ def evaluate(
         rprint(f"[red]Error:[/] No trial.json records found in {p}")
         raise typer.Exit(code=1)
 
-    by_model: dict[str, dict[str, dict[str, Any]]] = {}
+    # Discover campaign_summary.json winner maps so 20-trial search folders select the locked winner
+    # instead of colliding across 20 seed=42 search points!
+    winner_trial_ids_by_campaign_dir: dict[Path, str] = {}
+    for sfile in sorted(p.rglob("campaign_summary.json")):
+        try:
+            sdata = json.loads(sfile.read_text(encoding="utf-8"))
+            wtid = sdata.get("selected_winner_trial_id")
+            if isinstance(wtid, str) and wtid:
+                winner_trial_ids_by_campaign_dir[sfile.parent.resolve()] = wtid
+        except Exception:
+            pass
+
+    by_model: dict[str, dict[str, list[tuple[Path, dict[str, Any]]]]] = {}
     for jf in json_files:
+        tdir = jf.parent.resolve()
+        # Check if parent of `trials/<tid>` has a locked campaign_summary.json
+        cdir_candidate = tdir.parent.parent if tdir.parent.name == "trials" else tdir.parent
+        if cdir_candidate in winner_trial_ids_by_campaign_dir:
+            if tdir.name != winner_trial_ids_by_campaign_dir[cdir_candidate]:
+                continue
         rec = json.loads(jf.read_text(encoding="utf-8"))
         model_id = rec.get("model_id") or rec.get("trial_config", {}).get("model_id", "unknown")
-        arm_name = jf.parent.name
-        by_model.setdefault(model_id, {})[arm_name] = rec
+        arm_name = rec.get("arm") or rec.get("trial_config", {}).get("arm") or jf.parent.name
+        by_model.setdefault(model_id, {}).setdefault(arm_name, []).append((jf.parent, rec))
 
-    print(f"[ALOE] AST & Paired Bootstrap Evaluation | run_dir={run_dir} split={split} B={bootstrap:,}")
+    print(f"[ALOE] AST & Paired Statistical Evaluation | run_dir={run_dir} split={split} B={bootstrap:,}")
     for model_id, arms in sorted(by_model.items()):
         print(f"MODEL: {model_id} ({len(arms)} arms)")
-        for arm_name, rec in sorted(arms.items()):
-            m = rec.get("metrics", {})
-            params = int(m.get("trainable_params", 0))
-            ast_ok = float(m.get("ast_parse_success_rate", m.get("ast_parse_valid_rate", 0.0)))
-            keys_ok = float(m.get("ast_argument_name_accuracy", m.get("arg_keys_exact_rate", 0.0)))
-            vals_ok = float(m.get("ast_argument_value_accuracy", m.get("arg_values_exact_rate", 0.0)))
-            rss_gb = float(m.get("peak_rss_gb", float(m.get("peak_process_rss_mb", 0.0)) / 1024.0))
-            mps_gb = float(m.get("mps_driver_allocated_gb", 0.0))
-            print(
-                f"  {arm_name:15s} | params={params:10,d} | AST={ast_ok:5.1%} | "
-                f"ArgKeys={keys_ok:5.1%} | ArgVals={vals_ok:5.1%} | "
-                f"RSS={rss_gb:.2f} GB | MPS={mps_gb:.2f} GB"
-            )
+        arm_outcome_matrices: dict[str, dict[str, list[int]]] = {}
+        arm_seed_sets: dict[str, set[int]] = {}
+        model_mem_metrics: set[str] = set()
+        model_gpu_names: set[str] = set()
 
-        if "P1" in arms:
-            p1_m = arms["P1"].get("metrics", {})
-            n_q = int(p1_m.get("eval_samples", 8))
-            p1_rate = float(p1_m.get("ast_argument_name_accuracy", p1_m.get("arg_keys_exact_rate", 0.0)))
-            p1_k = round(p1_rate * n_q)
-            base_map = {f"q{i}": [1 if i < p1_k else 0] for i in range(n_q)}
+        for arm_name, trial_items in sorted(arms.items()):
+            accs = []
+            params_list = []
+            mem_list = []
+            stores_by_seed: dict[int, PredictionStore] = {}
+            arm_signatures: set[str] = set()
+            arm_mem_metrics: set[str] = set()
+            arm_gpus: set[str] = set()
 
-            for cand_arm in ("P4_Matched", "P4_SSM_Matched", "P2"):
-                if cand_arm in arms:
-                    cm = arms[cand_arm].get("metrics", {})
-                    c_rate = float(cm.get("ast_argument_name_accuracy", cm.get("arg_keys_exact_rate", 0.0)))
-                    c_k = round(c_rate * n_q)
-                    cand_map = {f"q{i}": [1 if i < c_k else 0] for i in range(n_q)}
-                    res = paired_bootstrap(cand_map, base_map, B=bootstrap, rng_seed=seed)
-                    print(
-                        f"  [BOOTSTRAP {cand_arm} vs P1 (ArgKeys)] delta={res.mean_diff:+.3f} "
-                        f"95% CI=[{res.ci_low:+.3f}, {res.ci_high:+.3f}] "
-                        f"p={res.p_value:.4f} (n={res.n_queries}, B={res.B:,})"
+            for tdir, rec in trial_items:
+                m = rec.get("metrics") or {}
+                mem_metric = str(m.get("memory_metric_name", "process_rss_sampled_100ms"))
+                gpu_label = str(rec.get("gpu_name") or rec.get("hardware") or "unknown")
+                arm_mem_metrics.add(mem_metric)
+                model_mem_metrics.add(mem_metric)
+                arm_gpus.add(gpu_label)
+                model_gpu_names.add(gpu_label)
+
+                tc_raw = rec.get("trial_config")
+                if isinstance(tc_raw, dict) and tc_raw:
+                    try:
+                        arm_signatures.add(TrialConfig.model_validate(tc_raw).canonical_signature())
+                    except Exception:
+                        pass
+
+                params_list.append(int(m.get("trainable_params", 0)))
+                acc_val = float(
+                    m.get(
+                        "ast_exact_match_accuracy",
+                        m.get("tool_accuracy", m.get("ast_argument_value_accuracy", 0.0)) or 0.0,
                     )
+                )
+                accs.append(acc_val)
+                mem_gb = float(m.get("peak_memory_gb", m.get("peak_rss_gb", 0.0)) or 0.0)
+                mem_list.append(mem_gb)
+
+                t_seed = int(rec.get("trial_config", {}).get("seed", 42))
+                pred_file = tdir / f"predictions_{split}.jsonl"
+                if pred_file.is_file():
+                    if t_seed in stores_by_seed:
+                        rprint(
+                            f"[red]Error:[/] Duplicate seed {t_seed} for {model_id}/{arm_name}; "
+                            "refusing silent trial overwrite or multi-config pooling."
+                        )
+                        raise typer.Exit(code=1)
+                    stores_by_seed[t_seed] = PredictionStore(pred_file)
+
+            if len(arm_signatures) > 1:
+                rprint(
+                    f"[red]Error:[/] Multiple distinct configurations ({len(arm_signatures)}) found "
+                    f"under {model_id}/{arm_name} without winner lock; refusing configuration pooling."
+                )
+                raise typer.Exit(code=1)
+            if len(arm_mem_metrics) > 1 or len(arm_gpus) > 1:
+                rprint(
+                    f"[red]Error:[/] Hardware/memory metric mismatch inside {model_id}/{arm_name}: "
+                    f"metrics={sorted(arm_mem_metrics)}, gpus={sorted(arm_gpus)} (ADR-012/017 violation)."
+                )
+                raise typer.Exit(code=1)
+
+            mean_acc = sum(accs) / max(len(accs), 1)
+            mean_mem = sum(mem_list) / max(len(mem_list), 1)
+            params_0 = params_list[0] if params_list else 0
+            print(
+                f"  {arm_name:15s} | seeds={len(trial_items)} | params={params_0:10,d} | "
+                f"ExactMatch={mean_acc:6.2%} | PeakMem={mean_mem:.2f} GB ({next(iter(arm_mem_metrics))})"
+            )
+            if stores_by_seed:
+                if len(stores_by_seed) < required_seeds:
+                    rprint(
+                        f"[red]Error:[/] Arm '{arm_name}' has {len(stores_by_seed)} seed(s), "
+                        f"but --min-seeds/--final requires at least {required_seeds} (ADR-014)."
+                    )
+                    raise typer.Exit(code=1)
+                arm_seed_sets[arm_name] = set(stores_by_seed.keys())
+                arm_outcome_matrices[arm_name] = build_paired_outcome_matrix(stores_by_seed)
+
+        if len(model_mem_metrics) > 1 or len(model_gpu_names) > 1:
+            rprint(
+                f"[red]Error:[/] Cross-arm hardware/metric pooling prohibited for {model_id}: "
+                f"metrics={sorted(model_mem_metrics)}, gpus={sorted(model_gpu_names)} (ADR-012/017)."
+            )
+            raise typer.Exit(code=1)
+
+        # Run true per-question paired bootstrap + Holm-Bonferroni ONLY when real JSONL predictions exist
+        ref_key = baseline_arm if baseline_arm in arm_outcome_matrices else (
+            "P1" if "P1" in arm_outcome_matrices else ""
+        )
+        if ref_key and len(arm_outcome_matrices) > 1:
+            base_mat = arm_outcome_matrices[ref_key]
+            base_seeds = arm_seed_sets[ref_key]
+            raw_p_map: dict[str, float] = {}
+            boot_results: dict[str, Any] = {}
+            mcn_results: dict[str, Any] = {}
+            comp_names = [k for k in sorted(arm_outcome_matrices.keys()) if k != ref_key]
+            for cand_key in comp_names:
+                if arm_seed_sets[cand_key] != base_seeds:
+                    rprint(
+                        f"[red]Error:[/] Paired comparison requires identical seed labels: "
+                        f"{cand_key}={sorted(arm_seed_sets[cand_key])} vs {ref_key}={sorted(base_seeds)}"
+                    )
+                    raise typer.Exit(code=1)
+                cand_mat = arm_outcome_matrices[cand_key]
+                if set(cand_mat.keys()) != set(base_mat.keys()):
+                    rprint(
+                        f"[red]Error:[/] Query ID set mismatch between {cand_key} and {ref_key}"
+                    )
+                    raise typer.Exit(code=1)
+                res = paired_bootstrap(cand_mat, base_mat, B=bootstrap, rng_seed=seed)
+                mcn = mcnemar_exact(cand_mat, base_mat)
+                boot_results[cand_key] = res
+                mcn_results[cand_key] = mcn
+                raw_p_map[cand_key] = res.p_value
+
+            holm_map = holm_bonferroni(raw_p_map, alpha=0.05)
+            for cand_key in sorted(boot_results.keys()):
+                res = boot_results[cand_key]
+                h = holm_map[cand_key]
+                mcn = mcn_results[cand_key]
+                print(
+                    f"  [PAIRED {cand_key} vs {ref_key}] delta={res.mean_diff:+.3f} "
+                    f"95% {res.ci_method.upper()} CI=[{res.ci_low:+.3f}, {res.ci_high:+.3f}] "
+                    f"p_raw={res.p_value:.4f} p_holm={h.adjusted_p:.4f} "
+                    f"mcnemar_p={mcn.exact_p_value:.4f} (n={res.n_queries}, seeds={res.n_seeds})"
+                )
+        else:
+            print(
+                f"  [NOTE] Per-question predictions_{split}.jsonl not present in {run_dir}; "
+                "refusing fabricated aggregate-to-paired bootstrap reconstruction."
+            )
 
 
 if __name__ == "__main__":

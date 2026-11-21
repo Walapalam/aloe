@@ -1,4 +1,4 @@
-"""Unit tests for AST-based tool calling evaluator."""
+"""Unit tests for AST-based tool calling evaluator (Strict Protocol-v1 + Lenient Diagnostic)."""
 from __future__ import annotations
 
 from aloe.evaluation.tool_calling import (
@@ -6,16 +6,15 @@ from aloe.evaluation.tool_calling import (
     extract_json_candidate,
     normalize_value,
     parse_tool_calls_from_text,
+    same_json,
 )
 
 
 def test_extract_json_candidate() -> None:
-    # 1. Plain JSON string
     assert extract_json_candidate('{"name": "search", "arguments": {"q": "test"}}') == (
         '{"name": "search", "arguments": {"q": "test"}}'
     )
 
-    # 2. Markdown fenced JSON
     fenced = """Here is the tool call:
 ```json
 {"name": "get_weather", "arguments": {"city": "London"}}
@@ -23,18 +22,21 @@ def test_extract_json_candidate() -> None:
 Hope that helps!"""
     assert extract_json_candidate(fenced) == '{"name": "get_weather", "arguments": {"city": "London"}}'
 
-    # 3. Leading and trailing prose without fences
     unfenced = 'Sure! {"name": "fetch", "arguments": {"id": 101}} is the function.'
     assert extract_json_candidate(unfenced) == '{"name": "fetch", "arguments": {"id": 101}}'
 
 
-def test_normalize_value() -> None:
-    # Integer-equivalent float
+def test_same_json_strict_and_normalize_value_diagnostic() -> None:
+    # Strict comparator preserves case, string vs int, and bool vs int
+    assert same_json(42.0, 42) is True
+    assert same_json("001", 1) is False
+    assert same_json(True, 1) is False
+    assert same_json("CMB", "cmb") is False
+
+    # Legacy diagnostic helper remains available for secondary lenient_exact_match
     assert normalize_value(42.0) == 42
-    # String numeric coercion
     assert normalize_value("100.0") == 100
     assert normalize_value("  Hello World  ") == "hello world"
-    # Nested dictionary sorting
     assert normalize_value({"b": 2, "a": 1}) == {"a": 1, "b": 2}
 
 
@@ -47,17 +49,23 @@ def test_parse_tool_calls_from_text() -> None:
     assert calls[0].arguments == {"item": "pizza", "quantity": 2}
 
 
-def test_evaluator_exact_match() -> None:
-    evaluator = ASTToolCallEvaluator()
-    output = '{"name": "book_flight", "arguments": {"origin": "CMB", "dest": "LHR", "price": 450.0}}'
-    gt = {"name": "book_flight", "arguments": {"origin": "cmb", "dest": "lhr", "price": 450}}
+def test_evaluator_strict_vs_lenient_case() -> None:
+    strict_eval = ASTToolCallEvaluator(strict=True)
+    output_exact = '{"name": "book_flight", "arguments": {"origin": "CMB", "dest": "LHR", "price": 450.0}}'
+    gt_exact = {"name": "book_flight", "arguments": {"origin": "CMB", "dest": "LHR", "price": 450}}
 
-    res = evaluator.evaluate_single(output, gt)
+    res = strict_eval.evaluate_single(output_exact, gt_exact)
     assert res.parse_success is True
     assert res.tool_match is True
     assert res.arg_names_match is True
     assert res.arg_values_match is True
     assert res.exact_match is True
+
+    # Case mismatch fails strict exact_match while setting secondary lenient_exact_match=True
+    gt_lower = {"name": "book_flight", "arguments": {"origin": "cmb", "dest": "lhr", "price": 450}}
+    res_case = strict_eval.evaluate_single(output_exact, gt_lower)
+    assert res_case.exact_match is False
+    assert res_case.lenient_exact_match is True
 
 
 def test_evaluator_mismatched_arguments() -> None:
@@ -83,9 +91,9 @@ def test_evaluator_batch_aggregation() -> None:
     ]
     gts = [
         {"name": "f1", "arguments": {"x": 1}},
-        {"name": "f2", "arguments": {"y": 99}},  # arg mismatch
+        {"name": "f2", "arguments": {"y": 99}},
         {"name": "f3", "arguments": {}},
-        {"name": "target_tool", "arguments": {"z": 3}},  # tool mismatch
+        {"name": "target_tool", "arguments": {"z": 3}},
     ]
 
     summary = evaluator.evaluate_batch(preds, gts)

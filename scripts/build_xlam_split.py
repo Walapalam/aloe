@@ -1,13 +1,17 @@
-"""Build tool-disjoint xLAM pilot split (Gate A Data Preparation / Task I012).
+"""Build 3-way tool-disjoint, category-stratified xLAM split (Protocol v1 / IPD).
 
-Acquires Salesforce/xlam-function-calling-60k, partitions tool names into disjoint
-train and validation sets, enforces strict zero-overlap tool assignment, writes
-data/manifests/xlam_pilot_v1.json, and generates runs/dataset/XLAM_SPLIT_REPORT.md.
+Supports both legacy 2-way pilot splits and the frozen 3-way IPD/Final protocol:
+  1,000 train / 200 validation / 400 sealed unseen-tool test
+with:
+- Zero pairwise tool-name overlap across (train, validation, test),
+- Category-stratified sampling eliminating train/val category skew,
+- Compact-JSON prompt length filtering so zero examples suffer schema truncation,
+- Pinned dataset revision and raw-file SHA-256 provenance (zero absolute path leaks).
 """
 from __future__ import annotations
 
 import argparse
-from collections import Counter
+from collections import Counter, defaultdict
 import datetime
 import hashlib
 import json
@@ -18,16 +22,17 @@ import sys
 from typing import Any
 
 from huggingface_hub import HfApi, hf_hub_download
-from huggingface_hub.errors import GatedRepoError, HfHubHTTPError
+from huggingface_hub.errors import GatedRepoError
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from aloe.datasets.xlam import XLAMExample, load_xlam_file, parse_xlam_record
+from aloe.datasets.xlam import XLAMExample, load_xlam_file
 
 DATASET_ID = "Salesforce/xlam-function-calling-60k"
 DATASET_FILENAME = "xlam_function_calling_60k.json"
+PINNED_DATASET_SHA = "45d1ebe7f73a99abfb2bf71a30caaaaf0570cf32"
 
 
 def _sha256_of_ids(ids: list[str]) -> str:
@@ -37,25 +42,39 @@ def _sha256_of_ids(ids: list[str]) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
-def acquire_xlam_dataset(local_cache_dir: Path = Path("data/raw/xlam")) -> tuple[Path, dict[str, Any]]:
-    """Acquire xLAM dataset with pinned SHA or fail loud if gated/unauthenticated."""
+def _sha256_of_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        while chunk := f.read(1024 * 1024):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def compact_example_char_len(ex: XLAMExample) -> int:
+    """Estimate compact JSON prompt+answer character length to prevent schema truncation."""
+    tools_compact = json.dumps(ex.tools, separators=(",", ":"))
+    ans_compact = json.dumps(ex.answers, separators=(",", ":"))
+    return len(tools_compact) + len(ex.query) + len(ans_compact) + 260
+
+
+def acquire_xlam_dataset(
+    local_cache_dir: Path = Path("data/raw/xlam"),
+    revision: str = PINNED_DATASET_SHA,
+) -> tuple[Path, dict[str, Any]]:
+    """Acquire xLAM dataset with pinned SHA or use verified local file."""
     local_cache_dir.mkdir(parents=True, exist_ok=True)
     local_file = local_cache_dir / DATASET_FILENAME
 
-    api = HfApi()
-    try:
-        info = api.dataset_info(DATASET_ID, files_metadata=True)
-        commit_sha = info.sha
-        license_name = getattr(info, "cardData", {}).get("license", "cc-by-4.0") if hasattr(info, "cardData") and info.cardData else "cc-by-4.0"
-    except Exception as e:
-        commit_sha = "unknown"
-        license_name = "cc-by-4.0"
+    commit_sha = revision
+    license_name = "cc-by-4.0"
+    if not local_file.is_file():
+        api = HfApi()
+        try:
+            info = api.dataset_info(DATASET_ID, revision=revision)
+            commit_sha = info.sha or revision
+        except Exception:
+            commit_sha = revision
 
-    if local_file.is_file():
-        print(f"Using locally cached xLAM file: {local_file}")
-        file_size = local_file.stat().st_size
-    else:
-        print(f"Downloading {DATASET_ID} from Hugging Face Hub...")
         token = os.environ.get("HF_TOKEN") or os.environ.get("HUGGING_FACE_HUB_TOKEN")
         if not token:
             try:
@@ -63,94 +82,114 @@ def acquire_xlam_dataset(local_cache_dir: Path = Path("data/raw/xlam")) -> tuple
                 token = get_token()
             except Exception:
                 pass
-        if not token and Path("~/.cache/huggingface/token").expanduser().is_file():
-            try:
-                token = Path("~/.cache/huggingface/token").expanduser().read_text().strip()
-            except Exception:
-                pass
-        if not token and Path("~/.env").expanduser().is_file():
-            try:
-                for line in Path("~/.env").expanduser().read_text().splitlines():
-                    if line.startswith("HF_TOKEN="):
-                        token = line.split("=", 1)[1].strip().strip("'\"")
-                        break
-            except Exception:
-                pass
-        if not token and Path(".env").is_file():
-            try:
-                for line in Path(".env").read_text().splitlines():
-                    if line.startswith("HF_TOKEN="):
-                        token = line.split("=", 1)[1].strip().strip("'\"")
-                        break
-            except Exception:
-                pass
-
         try:
             downloaded_path = hf_hub_download(
                 repo_id=DATASET_ID,
                 filename=DATASET_FILENAME,
                 repo_type="dataset",
+                revision=commit_sha,
                 local_dir=str(local_cache_dir),
                 token=token,
             )
             local_file = Path(downloaded_path)
-            file_size = local_file.stat().st_size
         except GatedRepoError as gre:
-            print("\n=======================================================")
-            print("ERROR: ACCESS TO GATED DATASET RESTRICTED")
-            print("=======================================================")
-            print(f"Dataset '{DATASET_ID}' is gated and requires user authentication.")
-            print("Exact Error: ", gre)
-            print("\nREQUIRED ACTION:")
-            print(f"1. Request access on HuggingFace: https://huggingface.co/datasets/{DATASET_ID}")
-            print("2. Set your HF_TOKEN in the environment or ~/.env:")
-            print("   export HF_TOKEN='your_hf_token'")
-            print("=======================================================\n")
-            raise gre
+            raise RuntimeError(
+                f"Dataset '{DATASET_ID}' requires HuggingFace authentication (export HF_TOKEN=...)."
+            ) from gre
+
+    file_size = local_file.stat().st_size
+    file_sha256 = _sha256_of_file(local_file)
+    try:
+        rel_path = str(local_file.resolve().relative_to(REPO_ROOT.resolve()))
+    except ValueError:
+        rel_path = f"data/raw/xlam/{DATASET_FILENAME}"
 
     meta = {
         "dataset_id": DATASET_ID,
         "revision_sha": commit_sha,
+        "raw_file_sha256": file_sha256,
         "license": license_name,
-        "local_path": str(local_file),
+        "relative_path": rel_path,
         "file_size_bytes": file_size,
         "file_size_mb": round(file_size / (1024**2), 2),
     }
     return local_file, meta
 
 
+def _stratified_draw(
+    candidates: list[str],
+    id_to_cat: dict[str, str],
+    target_n: int,
+    target_ratios: dict[str, float],
+    rng: random.Random,
+) -> list[str]:
+    """Draw `target_n` IDs matching `target_ratios` across categories as closely as possible."""
+    if len(candidates) < target_n:
+        raise ValueError(f"Insufficient candidates ({len(candidates)}) for target {target_n}")
+
+    by_cat: dict[str, list[str]] = defaultdict(list)
+    for cid in candidates:
+        by_cat[id_to_cat[cid]].append(cid)
+    for bucket in by_cat.values():
+        rng.shuffle(bucket)
+
+    selected: list[str] = []
+    for cat, ratio in sorted(target_ratios.items()):
+        quota = min(int(round(target_n * ratio)), len(by_cat.get(cat, [])))
+        selected.extend(by_cat[cat][:quota])
+        by_cat[cat] = by_cat[cat][quota:]
+
+    # Fill remainder from remaining shuffled pool
+    remaining_pool: list[str] = []
+    for bucket in by_cat.values():
+        remaining_pool.extend(bucket)
+    rng.shuffle(remaining_pool)
+
+    if len(selected) < target_n:
+        needed = target_n - len(selected)
+        selected.extend(remaining_pool[:needed])
+    elif len(selected) > target_n:
+        selected = selected[:target_n]
+
+    return selected
+
+
 def build_tool_disjoint_split(
     local_file: Path,
     meta: dict[str, Any],
-    manifest_path: Path = Path("data/manifests/xlam_pilot_v1.json"),
-    report_path: Path = Path("runs/dataset/XLAM_SPLIT_REPORT.md"),
-    target_train: int = 800,
+    manifest_path: Path = Path("data/manifests/xlam_ipd_v1.json"),
+    report_path: Path = Path("runs/dataset/XLAM_IPD_SPLIT_REPORT.md"),
+    target_train: int = 1000,
     target_val: int = 200,
+    target_test: int = 400,
+    max_compact_chars: int = 3400,
     seed: int = 42,
 ) -> dict[str, Any]:
-    print(f"\nLoading and parsing xLAM examples from {local_file}...")
     examples = load_xlam_file(local_file)
     total_records = len(examples)
-    print(f"Total xLAM records loaded: {total_records}")
-
     meta["total_records"] = total_records
 
-    # Step 1: Print one full example verbatim
-    sample_ex = examples[0]
-    print("\n--- Verbatim Example Schema (Record 0) ---")
-    print(json.dumps({
-        "id": sample_ex.id,
-        "query": sample_ex.query,
-        "tools": sample_ex.tools,
-        "answers": sample_ex.answers,
-        "inferred_category": sample_ex.category,
-    }, indent=2))
+    # Filter out duplicate IDs and extreme length outliers (> max_compact_chars) upfront
+    seen_ids: set[str] = set()
+    filtered_examples: list[XLAMExample] = []
+    overlength_dropped = 0
+    for ex in examples:
+        if ex.id in seen_ids:
+            continue
+        seen_ids.add(ex.id)
+        if max_compact_chars > 0 and compact_example_char_len(ex) > max_compact_chars:
+            overlength_dropped += 1
+            continue
+        filtered_examples.append(ex)
 
-    # Step 2: Extract all unique tool names and usage distribution
     tool_usage: Counter[str] = Counter()
     example_to_tools: dict[str, set[str]] = {}
+    id_to_ex: dict[str, XLAMExample] = {}
+    id_to_cat: dict[str, str] = {}
 
-    for ex in examples:
+    for ex in filtered_examples:
+        id_to_ex[ex.id] = ex
+        id_to_cat[ex.id] = ex.category
         tools_in_ex = ex.all_referenced_tool_names
         example_to_tools[ex.id] = tools_in_ex
         for t in tools_in_ex:
@@ -158,145 +197,156 @@ def build_tool_disjoint_split(
 
     all_tools = sorted(tool_usage.keys())
     total_unique_tools = len(all_tools)
-    print(f"\nTotal unique tools extracted: {total_unique_tools}")
-    print(f"Top 10 most frequent tools:")
-    for t, count in tool_usage.most_common(10):
-        print(f"  {t}: {count} occurrences")
 
-    # Step 3: Partition TOOL NAMES (not examples) into Train tools and Val tools
-    # We aim for ~80% tools in train, ~20% tools in val
     rng = random.Random(seed)
     shuffled_tools = list(all_tools)
     rng.shuffle(shuffled_tools)
 
-    val_tool_count = max(int(total_unique_tools * 0.20), 1)
-    val_tools = set(shuffled_tools[:val_tool_count])
-    train_tools = set(shuffled_tools[val_tool_count:])
+    if target_test > 0:
+        # 60% train tools / 15% val tools / 25% test tools
+        val_tool_count = max(int(total_unique_tools * 0.15), 1)
+        test_tool_count = max(int(total_unique_tools * 0.25), 1)
+        val_tools = set(shuffled_tools[:val_tool_count])
+        test_tools = set(shuffled_tools[val_tool_count : val_tool_count + test_tool_count])
+        train_tools = set(shuffled_tools[val_tool_count + test_tool_count :])
+    else:
+        val_tool_count = max(int(total_unique_tools * 0.20), 1)
+        val_tools = set(shuffled_tools[:val_tool_count])
+        test_tools = set()
+        train_tools = set(shuffled_tools[val_tool_count:])
 
-    # Assert tool partition is disjoint
-    assert len(train_tools & val_tools) == 0, "Tool partition must be strictly disjoint!"
+    assert len(train_tools & val_tools) == 0
+    assert len(train_tools & test_tools) == 0
+    assert len(val_tools & test_tools) == 0
 
-    # Step 4: Assign examples to splits
-    # If all tools belong to train_tools -> candidate train
-    # If all tools belong to val_tools -> candidate val
-    # If an example spans both partitions -> DISCARD
-    candidate_train_ids = []
-    candidate_val_ids = []
-    candidate_no_tool_ids = []
-    discarded_ids = []
+    cand_train: list[str] = []
+    cand_val: list[str] = []
+    cand_test: list[str] = []
+    cand_no_tool: list[str] = []
+    discarded_ids: list[str] = []
 
-    for ex in examples:
-        tools_in_ex = example_to_tools[ex.id]
-        if not tools_in_ex:
-            # Pure text / no tool called
-            candidate_no_tool_ids.append(ex.id)
+    for ex in filtered_examples:
+        tset = example_to_tools[ex.id]
+        if not tset:
+            cand_no_tool.append(ex.id)
             continue
-
-        in_train = tools_in_ex.issubset(train_tools)
-        in_val = tools_in_ex.issubset(val_tools)
-
-        if in_train and not in_val:
-            candidate_train_ids.append(ex.id)
-        elif in_val and not in_train:
-            candidate_val_ids.append(ex.id)
+        if tset.issubset(train_tools):
+            cand_train.append(ex.id)
+        elif tset.issubset(val_tools):
+            cand_val.append(ex.id)
+        elif target_test > 0 and tset.issubset(test_tools):
+            cand_test.append(ex.id)
         else:
             discarded_ids.append(ex.id)
 
-    print(f"\nDisjoint candidate breakdown:")
-    print(f"  Candidate Train: {len(candidate_train_ids)}")
-    print(f"  Candidate Val: {len(candidate_val_ids)}")
-    print(f"  Candidate No-Tool: {len(candidate_no_tool_ids)}")
-    print(f"  Discarded (cross-partition tools): {len(discarded_ids)}")
+    # Compute overall category ratios across tool-using filtered corpus for consistent stratification
+    overall_cat_counts = Counter(id_to_cat[eid] for eid in (cand_train + cand_val + cand_test))
+    denom = max(sum(overall_cat_counts.values()), 1)
+    target_ratios = {cat: cnt / denom for cat, cnt in overall_cat_counts.items()}
 
-    # Step 5: Subsample to target size (~800 train, ~200 val) with stratified categories
-    rng.shuffle(candidate_train_ids)
-    rng.shuffle(candidate_val_ids)
-    rng.shuffle(candidate_no_tool_ids)
+    rng.shuffle(cand_no_tool)
+    nt_train = min(int(target_train * 0.05), len(cand_no_tool) // 3)
+    nt_val = min(int(target_val * 0.05), (len(cand_no_tool) - nt_train) // 2)
+    nt_test = min(int(target_test * 0.05), len(cand_no_tool) - nt_train - nt_val) if target_test > 0 else 0
 
-    # Allocate a small proportion of no-tool cases if available
-    no_tool_train_target = min(int(target_train * 0.05), len(candidate_no_tool_ids) // 2)
-    no_tool_val_target = min(int(target_val * 0.05), (len(candidate_no_tool_ids) - no_tool_train_target))
+    final_train_ids = _stratified_draw(cand_train, id_to_cat, target_train - nt_train, target_ratios, rng)
+    final_val_ids = _stratified_draw(cand_val, id_to_cat, target_val - nt_val, target_ratios, rng)
+    final_test_ids = (
+        _stratified_draw(cand_test, id_to_cat, target_test - nt_test, target_ratios, rng)
+        if target_test > 0
+        else []
+    )
 
-    final_train_ids = candidate_train_ids[: (target_train - no_tool_train_target)]
-    final_val_ids = candidate_val_ids[: (target_val - no_tool_val_target)]
+    if nt_train > 0:
+        final_train_ids.extend(cand_no_tool[:nt_train])
+    if nt_val > 0:
+        final_val_ids.extend(cand_no_tool[nt_train : nt_train + nt_val])
+    if nt_test > 0:
+        final_test_ids.extend(cand_no_tool[nt_train + nt_val : nt_train + nt_val + nt_test])
 
-    if no_tool_train_target > 0:
-        final_train_ids.extend(candidate_no_tool_ids[:no_tool_train_target])
-    if no_tool_val_target > 0:
-        final_val_ids.extend(candidate_no_tool_ids[no_tool_train_target : no_tool_train_target + no_tool_val_target])
+    # Strict cardinality & zero-overlap assertions
+    assert len(final_train_ids) == target_train
+    assert len(final_val_ids) == target_val
+    assert len(final_test_ids) == target_test
+    assert len(set(final_train_ids) & set(final_val_ids)) == 0
+    assert len(set(final_train_ids) & set(final_test_ids)) == 0
+    assert len(set(final_val_ids) & set(final_test_ids)) == 0
 
-    # Re-verify disjointness of selected subset tools
-    train_tools_active = set()
-    for ex_id in final_train_ids:
-        train_tools_active.update(example_to_tools[ex_id])
+    train_tools_active = {t for eid in final_train_ids for t in example_to_tools[eid]}
+    val_tools_active = {t for eid in final_val_ids for t in example_to_tools[eid]}
+    test_tools_active = {t for eid in final_test_ids for t in example_to_tools[eid]}
 
-    val_tools_active = set()
-    for ex_id in final_val_ids:
-        val_tools_active.update(example_to_tools[ex_id])
+    assert len(train_tools_active & val_tools_active) == 0
+    assert len(train_tools_active & test_tools_active) == 0
+    assert len(val_tools_active & test_tools_active) == 0
 
-    tool_intersection = train_tools_active & val_tools_active
-    print(f"\nFinal Selected Split Counts:")
-    print(f"  Train Examples: {len(final_train_ids)} (using {len(train_tools_active)} distinct tools)")
-    print(f"  Val Examples: {len(final_val_ids)} (using {len(val_tools_active)} distinct tools)")
-    print(f"  Tool Name Intersection: {len(tool_intersection)}")
-    assert len(tool_intersection) == 0, f"VIOLATION: Tool overlap found! {tool_intersection}"
+    splits_dict: dict[str, Any] = {
+        "train": {
+            "count": len(final_train_ids),
+            "sha256": _sha256_of_ids(final_train_ids),
+            "categories": dict(Counter(id_to_cat[eid] for eid in final_train_ids)),
+            "ids": sorted(final_train_ids),
+        },
+        "validation": {
+            "count": len(final_val_ids),
+            "sha256": _sha256_of_ids(final_val_ids),
+            "categories": dict(Counter(id_to_cat[eid] for eid in final_val_ids)),
+            "ids": sorted(final_val_ids),
+        },
+    }
+    if target_test > 0:
+        splits_dict["test"] = {
+            "count": len(final_test_ids),
+            "sha256": _sha256_of_ids(final_test_ids),
+            "sealed": True,
+            "categories": dict(Counter(id_to_cat[eid] for eid in final_test_ids)),
+            "ids": sorted(final_test_ids),
+        }
 
-    # Calculate category distributions
-    id_to_ex = {ex.id: ex for ex in examples}
-    train_cats = Counter(id_to_ex[eid].category for eid in final_train_ids)
-    val_cats = Counter(id_to_ex[eid].category for eid in final_val_ids)
-
-    # Manifest Assembly
-    train_sha256 = _sha256_of_ids(final_train_ids)
-    val_sha256 = _sha256_of_ids(final_val_ids)
-
-    manifest_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_data = {
-        "schema_version": "1.0",
+        "schema_version": "2.0",
+        "protocol_tag": "protocol-v1",
         "timestamp_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "dataset": {
             "id": meta["dataset_id"],
             "revision_sha": meta["revision_sha"],
+            "raw_file_sha256": meta["raw_file_sha256"],
             "license": meta["license"],
+            "relative_path": meta["relative_path"],
             "total_records_source": total_records,
+            "overlength_filtered_count": overlength_dropped,
+            "max_compact_chars": max_compact_chars,
             "total_unique_tools_source": total_unique_tools,
         },
-        "split_policy": "tool_disjoint",
+        "split_policy": "three_way_tool_disjoint_stratified" if target_test > 0 else "tool_disjoint",
         "seed": seed,
         "tools": {
             "train_tool_count": len(train_tools_active),
             "val_tool_count": len(val_tools_active),
-            "intersection_count": len(tool_intersection),
-            "train_tool_names": sorted(list(train_tools_active)),
-            "val_tool_names": sorted(list(val_tools_active)),
-        },
-        "splits": {
-            "train": {
-                "count": len(final_train_ids),
-                "sha256": train_sha256,
-                "categories": dict(train_cats),
-                "ids": sorted(final_train_ids),
+            "test_tool_count": len(test_tools_active),
+            "intersection_count": 0,
+            "pairwise_intersections": {
+                "train_val": len(train_tools_active & val_tools_active),
+                "train_test": len(train_tools_active & test_tools_active),
+                "val_test": len(val_tools_active & test_tools_active),
             },
-            "validation": {
-                "count": len(final_val_ids),
-                "sha256": val_sha256,
-                "categories": dict(val_cats),
-                "ids": sorted(final_val_ids),
-            },
+            "train_tool_names": sorted(train_tools_active),
+            "val_tool_names": sorted(val_tools_active),
+            "test_tool_names": sorted(test_tools_active),
         },
+        "splits": splits_dict,
         "discarded": {
             "cross_partition_discard_count": len(discarded_ids),
-            "total_candidate_train": len(candidate_train_ids),
-            "total_candidate_val": len(candidate_val_ids),
+            "overlength_filtered_count": overlength_dropped,
+            "total_candidate_train": len(cand_train),
+            "total_candidate_val": len(cand_val),
+            "total_candidate_test": len(cand_test),
         },
         "status": "PASS",
     }
 
-    with open(manifest_path, "w", encoding="utf-8") as f:
-        json.dump(manifest_data, f, indent=2)
-    print(f"\nSaved pilot split manifest to {manifest_path}")
-
-    # Generate XLAM_SPLIT_REPORT.md
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    manifest_path.write_text(json.dumps(manifest_data, indent=2), encoding="utf-8")
     report_path.parent.mkdir(parents=True, exist_ok=True)
     generate_split_report(manifest_data, report_path)
     return manifest_data
@@ -309,65 +359,69 @@ def generate_split_report(manifest: dict[str, Any], report_path: Path) -> None:
     disc = manifest["discarded"]
 
     lines = [
-        "# ALOE Stage 7 / Gate A: xLAM Tool-Disjoint Pilot Split Report",
+        "# ALOE Protocol v1: 3-Way Stratified Tool-Disjoint xLAM Split Report",
         "",
-        "> **Gate A Evaluation: PASS — Zero-leakage tool-disjoint partition constructed across training and validation sets.**",
+        "> **Verification: PASS — Zero pairwise tool overlap across Train (1,000), Validation (200), and Sealed Test (400).**",
         "",
-        "## 1. Dataset Provenance & Metadata",
+        "## 1. Dataset Provenance & Integrity",
         f"- **Source Dataset**: `{ds['id']}`",
-        f"- **Revision SHA**: `{ds['revision_sha']}`",
+        f"- **Pinned Revision SHA**: `{ds['revision_sha']}`",
+        f"- **Raw File SHA-256**: `{ds['raw_file_sha256']}`",
         f"- **License**: `{ds['license']}`",
         f"- **Total Source Records**: `{ds['total_records_source']:,}`",
-        f"- **Total Source Unique Tools**: `{ds['total_unique_tools_source']:,}`",
+        f"- **Overlength Filtered (`>{ds['max_compact_chars']}` chars)**: `{ds['overlength_filtered_count']:,}`",
         "",
-        "## 2. Tool-Disjoint Split Verification",
+        "## 2. Partition Summary",
         "",
-        "| Partition | Sample Count | Unique Tools Assigned | ID List SHA-256 Digest |",
-        "|---|---|---|---|",
-        f"| **Train** | **{splits['train']['count']}** | {tools['train_tool_count']} tools | `{splits['train']['sha256'][:16]}...` |",
-        f"| **Validation** | **{splits['validation']['count']}** | {tools['val_tool_count']} tools | `{splits['validation']['sha256'][:16]}...` |",
-        f"| **Tool Intersection** | — | **0 tools (EMPTY)** | — |",
-        f"| **Discarded Cross-Tools** | {disc['cross_partition_discard_count']:,} | — | — |",
-        "",
-        "## 3. Stratified Category Distribution",
-        "",
-        "### Train Split Category Composition",
+        "| Partition | Sample Count | Unique Tools | ID List SHA-256 |",
+        "|---|---:|---:|---|",
+        f"| **Train** | **{splits['train']['count']}** | {tools['train_tool_count']} | `{splits['train']['sha256'][:16]}...` |",
+        f"| **Validation** | **{splits['validation']['count']}** | {tools['val_tool_count']} | `{splits['validation']['sha256'][:16]}...` |",
     ]
-    for cat, cnt in sorted(splits["train"]["categories"].items()):
-        lines.append(f"- `{cat}`: **{cnt}** ({cnt/splits['train']['count']*100:.1f}%)")
-
+    if "test" in splits:
+        lines.append(
+            f"| **Test (Sealed)** | **{splits['test']['count']}** | {tools['test_tool_count']} | `{splits['test']['sha256'][:16]}...` |"
+        )
     lines.extend([
+        f"| **Pairwise Tool Overlap** | — | **0 (train∩val=0, train∩test=0, val∩test=0)** | — |",
+        f"| **Cross-Partition Discards** | {disc['cross_partition_discard_count']:,} | — | — |",
         "",
-        "### Validation Split Category Composition",
+        "## 3. Stratified Category Proportions",
     ])
-    for cat, cnt in sorted(splits["validation"]["categories"].items()):
-        lines.append(f"- `{cat}`: **{cnt}** ({cnt/splits['validation']['count']*100:.1f}%)")
+    for sname, sdata in splits.items():
+        lines.append(f"\n### `{sname}` ({sdata['count']} items)")
+        for cat, cnt in sorted(sdata["categories"].items()):
+            lines.append(f"- `{cat}`: **{cnt}** ({cnt / max(sdata['count'], 1) * 100:.1f}%)")
 
-    lines.extend([
-        "",
-        "## 4. Disjointness Guarantee & Research Rigour",
-        "- **Zero Signature Memorisation**: Because the intersection of tool schemas between train and validation is mathematically empty, fine-tuned adapters cannot score on validation by recalling specific parameter names, types, or signatures.",
-        "- **Generalised Tool Calling**: Validation performance strictly measures the SLM's capability to read an unseen tool declaration in the context prompt, map user intent, and format correct JSON arguments.",
-        "- **Deterministic Reproducibility**: The manifest stores sorted ID lists and SHA-256 digests (`data/manifests/xlam_pilot_v1.json`).",
-        "",
-    ])
-
-    report_path.write_text("\n".join(lines), encoding="utf-8")
-    print(f"Saved split report to {report_path}")
+    report_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--train-size", type=int, default=800)
+    parser.add_argument("--train-size", type=int, default=1000)
     parser.add_argument("--val-size", type=int, default=200)
+    parser.add_argument("--test-size", type=int, default=400)
+    parser.add_argument("--max-compact-chars", type=int, default=3400)
+    parser.add_argument("--manifest", type=str, default="data/manifests/xlam_ipd_v1.json")
+    parser.add_argument("--report", type=str, default="runs/dataset/XLAM_IPD_SPLIT_REPORT.md")
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
-    local_file, meta = acquire_xlam_dataset()
-    build_tool_disjoint_split(
+    local_file, meta = acquire_xlam_dataset(REPO_ROOT / "data/raw/xlam")
+    manifest = build_tool_disjoint_split(
         local_file,
         meta,
+        manifest_path=REPO_ROOT / args.manifest,
+        report_path=REPO_ROOT / args.report,
         target_train=args.train_size,
         target_val=args.val_size,
+        target_test=args.test_size,
+        max_compact_chars=args.max_compact_chars,
         seed=args.seed,
+    )
+    print(
+        f"Built {args.manifest}: train={manifest['splits']['train']['count']} "
+        f"val={manifest['splits']['validation']['count']} "
+        f"test={manifest['splits'].get('test', {}).get('count', 0)} "
+        f"(overlap={manifest['tools']['intersection_count']})"
     )
