@@ -338,3 +338,26 @@ On Apple Silicon, `peak_memory_gb` is formally defined as **peak process residen
 
 **Overturned if.** Sobol initial points all fail before $n_{\text{init}}$ observations complete — prevented by `CampaignRunner`'s fail-closed `max_attempts_per_trial` abort.
 
+---
+
+## ADR-019 · Multi-Shard Cloud Execution (`NVIDIA L4` Lock Addendum), Atomic HF Per-Arm Sync, & Contribution Disentanglement
+**Date:** 2026-11-23 · **Status:** Accepted · **Amends ADR-017 (`A100` → Pinned `NVIDIA L4`) & Extends ADR-018**
+
+**Context.**
+1. *Colab Pro+ SKU Availability (`ADR-017` Addendum):* During empirical execution on Google Colab Pro+, `NVIDIA L4` (`24 GB` Ada Lovelace `sm_89`, native `bfloat16` Tensor Cores, `~1.6` compute units/hr) exhibited substantially higher multi-session availability than `A100` while comfortably accommodating both hybrid models (`Falcon-H1-1.5B` peak VRAM `15.08 GB` uniform / `13.28 GB` typed). Moreover, consumer Colab allocates GPU hardware prior to Python runtime boot, preventing automatic in-script `A100` → `L4` fallback without violating single-SKU metric homogeneity (`locked_gpu_name`) across parallel tabs. The initial 60 `Falcon-H1` search trials (`aloe`, `b0`, `b1`) locked `hardware_lock.json` to `"NVIDIA L4"`.
+2. *Multi-Tab Concurrency Hazards:* Running multiple arms of the same model concurrently across separate Colab VMs against a shared store introduces cross-VM races if locking is per-model (`.campaign_lease.json`) or if each VM rewrites `model_all_arms_summary.json` whole.
+3. *Contribution Disentanglement (`C1` vs `C2`):* Comparing `ALOE` directly against `B0` conflates two distinct mechanisms: (`C1`) architecture-aware typed operator grammar (`{ssm, global_attention, local_attention, ffn}` with group-disable indicator $e_g \in \{0, 1\}$ under $\pm 5\%$ parameter parity) vs uniform `r=8` (`B0`), and (`C2`) sequential discrete `qLogNEHVI` (`ALOE`) vs uniform random sampling (`B1`) over the *exact same* feasible pool $\mathcal{F}_{0.05}$. Offline cross-arm hypervolume comparison also requires a single shared model-wide reference point rather than per-arm self-referential nadirs.
+
+**Decision.**
+1. **Homogeneous `NVIDIA L4` Cloud Lock:** Both hybrid CUDA models (`tiiuae/Falcon-H1-1.5B-Instruct` at frozen commit `f0d0ea2` and `LiquidAI/LFM3-1.7B` at frozen commit `8187255`) execute all search and 3-seed confirmation arms on `pinned_gpu="L4"` (`locked_gpu_name="NVIDIA L4"`, `locked_memory_metric_name="cuda_max_memory_allocated"`). Each shard pre-writes `hardware_lock.json` and verifies `torch.cuda.get_device_name(0) == "NVIDIA L4"` + exact `git rev-parse HEAD` prior to trial 0.
+2. **Optimistic-Concurrency Per-Shard Leases & Disjoint Per-Arm Uploads (`scripts/run_colab_shard.py`):**
+   - Each mobile/cloud shard acquires an atomic lease at `leases/<shard_id>.json` in the private artifact repository via `HfApi.create_commit(..., parent_commit=head_sha)` (retrying HTTP `412` races and failing closed if an unexpired active lease from another host exists).
+   - Shards write strictly to disjoint per-arm paths (`campaigns/<slug>/<arm>/` and `confirm_3seed/<slug>/<arm>/`), omitting intermediate `checkpoint-*` and bulk `adapter/` weights during per-trial commits (retaining the selected arm winner's `adapter/` upon arm completion) while refreshing the shard lease inside the same commit to stay well below Hub commit rate limits.
+   - Local aggregation (`scripts/sync_and_verify_hf_shards.py`) downloads completed arms, runs `verify_campaign_dir` + 3-seed cryptographic receipt checks, and deterministically reconstructs `model_all_arms_summary.json`.
+3. **Cross-Arm Shared-Reference 3-D Normalized Hypervolume (`scripts/compute_3d_hypervolume.py`):**
+   - For offline evaluation across all arms $\mathcal{A}$ of a given model, let $y_{i,k}$ denote maximization coordinates $[f_1, -f_2, -f_3] = [\text{Acc}_{\text{exact}}, -N_{\text{params}}, -M_{\text{tier}}]$ across the union of all completed search trials $\mathcal{U} = \bigcup_{a \in \mathcal{A}} \mathcal{D}_a$. Normalize each coordinate via $\tilde{y}_{i,k} = (y_{i,k} - \min_{\mathcal{U}} y_{\cdot,k}) / \max(\max_{\mathcal{U}} y_{\cdot,k} - \min_{\mathcal{U}} y_{\cdot,k}, \epsilon) \in [0, 1]^3$ against the shared nadir $\vec{r}_{\text{shared}} = (-0.15, -0.15, -0.15)$, dividing exact 3-D hypervolume by $1.15^3$ so $\widehat{\text{HV}}_3(a) \in [0, 1]$.
+   - Report (`C1`) typed-grammar effect (`B1` & `ALOE` vs `B0` and `Borobia-*` single-group controls) separately from (`C2`) sequential `qLogNEHVI` sample-efficiency effect (`ALOE` vs `B1` at $t = 1 \dots 20$ and across paired search seeds where executed).
+
+**Why.** Preserves strict single-SKU CUDA VRAM comparability across all hybrid arms, eliminates multi-tab cloud storage collisions, and separates structural search-space gains from acquisition-function gains for rigorous scientific reporting.
+
+
