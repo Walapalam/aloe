@@ -360,23 +360,42 @@ def _install_or_build_cuda_wheels(
     need_causal_conv: bool,
     syncer: HfShardSyncer,
 ) -> None:
+    import importlib
     import torch
 
     if not (need_mamba or need_causal_conv):
         return
 
-    def _ok() -> bool:
+    probe_stmt = "import causal_conv1d" + (
+        "; import mamba_ssm; from mamba_ssm.ops.selective_scan_interface import selective_scan_fn"
+        if need_mamba
+        else ""
+    )
+
+    def _ok(*, verbose: bool = False) -> bool:
+        importlib.invalidate_caches()
         try:
             import causal_conv1d  # type: ignore  # noqa: F401
             if need_mamba:
                 import mamba_ssm  # type: ignore  # noqa: F401
+                from mamba_ssm.ops.selective_scan_interface import selective_scan_fn  # type: ignore  # noqa: F401
+            subprocess.run([sys.executable, "-c", probe_stmt], check=True, capture_output=True, text=True)
             return True
-        except Exception:
+        except Exception as exc:
+            if verbose:
+                err_detail = getattr(exc, "stderr", "") or str(exc)
+                print(f"[WHEELS PROBE WARN] {err_detail.strip()}", flush=True)
             return False
 
-    if _ok():
+    if _ok(verbose=False):
         print("[WHEELS] Fast CUDA hybrid kernels already importable.", flush=True)
         return
+
+    # Always install pure-Python runtime/build deps from PyPI first (einops for mamba_ssm, ninja for causal_conv1d)
+    subprocess.run(
+        [sys.executable, "-m", "pip", "install", "-q", "packaging", "ninja", "einops"],
+        check=True,
+    )
 
     py_tag = f"py{sys.version_info.major}{sys.version_info.minor}"
     torch_tag = torch.__version__.split("+")[0]
@@ -385,15 +404,23 @@ def _install_or_build_cuda_wheels(
     abi_dir = wheel_root / abi_name
     abi_dir.mkdir(parents=True, exist_ok=True)
 
-    pkgs = ["causal-conv1d"] + (["mamba-ssm"] if need_mamba else [])
-    cached = list(abi_dir.glob("*.whl"))
-    if cached:
-        print(f"[WHEELS] Installing {len(cached)} pre-built wheels from {abi_dir}...", flush=True)
-        subprocess.run(
-            [sys.executable, "-m", "pip", "install", "-q", "--no-index", "--find-links", str(abi_dir), *pkgs],
+    cc_whls = sorted(abi_dir.glob("causal_conv1d-*.whl"))
+    mb_whls = sorted(abi_dir.glob("mamba_ssm-*.whl"))
+    if cc_whls and (not need_mamba or mb_whls):
+        whls_to_install = [str(cc_whls[-1])] + ([str(mb_whls[-1])] if need_mamba else [])
+        print(
+            f"[WHEELS] Installing {len(whls_to_install)} pre-built wheels (--no-deps) from {abi_dir}...",
+            flush=True,
+        )
+        res = subprocess.run(
+            [sys.executable, "-m", "pip", "install", "-q", "--no-deps", "--force-reinstall", *whls_to_install],
+            capture_output=True,
+            text=True,
             check=False,
         )
-        if _ok():
+        if res.returncode != 0:
+            print(f"[WHEELS FAST-PATH PIP ERROR]\n{res.stdout}\n{res.stderr}", flush=True)
+        elif _ok(verbose=True):
             print("[WHEELS] Pre-built CUDA kernels active (<10s fast path).", flush=True)
             return
 
@@ -404,13 +431,24 @@ def _install_or_build_cuda_wheels(
     env["MAMBA_FORCE_BUILD"] = "TRUE"
     env["MAX_JOBS"] = "4"
 
-    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "packaging", "ninja", "einops"], check=True)
     with tempfile.TemporaryDirectory() as sdist_tmp:
         tmp_p = Path(sdist_tmp)
         specs = ["causal-conv1d>=1.4.0,<2.0.0"] + (["mamba-ssm>=2.2.2,<3.0.0"] if need_mamba else [])
         for spec in specs:
             subprocess.run(
-                [sys.executable, "-m", "pip", "download", "--no-binary", ":all:", "--no-deps", "-d", str(tmp_p), spec],
+                [
+                    sys.executable,
+                    "-m",
+                    "pip",
+                    "download",
+                    "--no-binary",
+                    ":all:",
+                    "--no-deps",
+                    "--no-build-isolation",
+                    "-d",
+                    str(tmp_p),
+                    spec,
+                ],
                 check=True,
             )
         for tarball in sorted(tmp_p.glob("*.tar.gz")):
@@ -431,11 +469,14 @@ def _install_or_build_cuda_wheels(
                 check=True,
             )
 
+    built_cc = sorted(abi_dir.glob("causal_conv1d-*.whl"))
+    built_mb = sorted(abi_dir.glob("mamba_ssm-*.whl"))
+    built_to_install = [str(built_cc[-1])] + ([str(built_mb[-1])] if need_mamba else [])
     subprocess.run(
-        [sys.executable, "-m", "pip", "install", "-q", "--no-index", "--find-links", str(abi_dir), *pkgs],
+        [sys.executable, "-m", "pip", "install", "-q", "--no-deps", "--force-reinstall", *built_to_install],
         check=True,
     )
-    if not _ok():
+    if not _ok(verbose=True):
         raise RuntimeError("CUDA hybrid kernel import failed even after wheel build.")
 
     try:

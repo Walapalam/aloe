@@ -267,3 +267,76 @@ def test_generated_colab_shard_notebooks_valid_ast_and_zero_secrets() -> None:
         assert '"clean"' not in code_src
         assert str(spec["pinned_sha"]) in code_src
         assert str(spec["shard_id"]) in code_src
+
+
+def test_wheel_installer_never_uses_no_index_and_passes_no_deps_and_no_build_isolation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import subprocess as _sp
+    import sys as _sys
+    import types
+    import scripts.run_colab_shard as rcs
+
+    py_tag = f"py{_sys.version_info.major}{_sys.version_info.minor}"
+    torch_tag = torch.__version__.split("+")[0]
+    cu_tag = (torch.version.cuda or "cpu").replace(".", "")
+    abi_dir = tmp_path / "wheels_cache" / f"{py_tag}_torch{torch_tag}_cu{cu_tag}"
+    abi_dir.mkdir(parents=True)
+    cc_whl = abi_dir / "causal_conv1d-1.7.0-fake.whl"
+    mb_whl = abi_dir / "mamba_ssm-2.3.2.post1-fake.whl"
+    cc_whl.write_bytes(b"fake_cc")
+    mb_whl.write_bytes(b"fake_mb")
+
+    recorded_cmds: list[list[str]] = []
+    installed_ready = False
+
+    def _fake_run(cmd: list[str], *args: Any, **kwargs: Any) -> _sp.CompletedProcess[str]:
+        nonlocal installed_ready
+        recorded_cmds.append(list(cmd))
+        if "-c" in cmd and "import causal_conv1d" in cmd[-1]:
+            if not installed_ready:
+                raise _sp.CalledProcessError(1, cmd, stderr="not installed yet")
+            return _sp.CompletedProcess(cmd, 0, "", "")
+        if "pip" in cmd and "install" in cmd and any(x.endswith(".whl") for x in cmd):
+            installed_ready = True
+            # Simulate freshly installed modules in sys.modules
+            monkeypatch.setitem(_sys.modules, "causal_conv1d", types.ModuleType("causal_conv1d"))
+            mamba_mod = types.ModuleType("mamba_ssm")
+            ops_mod = types.ModuleType("mamba_ssm.ops")
+            ssi_mod = types.ModuleType("mamba_ssm.ops.selective_scan_interface")
+            setattr(ssi_mod, "selective_scan_fn", lambda *a, **k: None)
+            monkeypatch.setitem(_sys.modules, "mamba_ssm", mamba_mod)
+            monkeypatch.setitem(_sys.modules, "mamba_ssm.ops", ops_mod)
+            monkeypatch.setitem(_sys.modules, "mamba_ssm.ops.selective_scan_interface", ssi_mod)
+        return _sp.CompletedProcess(cmd, 0, "", "")
+
+    monkeypatch.setattr(rcs.subprocess, "run", _fake_run)
+    fake_syncer = HfShardSyncer(
+        api=_FakeHfApi(),
+        hf_repo="Walapalam/aloe-ipd-v1-runs",
+        shard_id="F1_test",
+        model_id="tiiuae/Falcon-H1-1.5B-Instruct",
+        arms=["b2"],
+        phases=["search"],
+    )
+    rcs._install_or_build_cuda_wheels(
+        tmp_path / "wheels_cache",
+        need_mamba=True,
+        need_causal_conv=True,
+        syncer=fake_syncer,
+    )
+
+    pip_cmds = [c for c in recorded_cmds if "pip" in c]
+    assert len(pip_cmds) == 2
+    assert pip_cmds[0][-3:] == ["packaging", "ninja", "einops"]
+    assert "--no-index" not in pip_cmds[0]
+    assert "--no-index" not in pip_cmds[1]
+    assert "--no-deps" in pip_cmds[1]
+    assert str(cc_whl) in pip_cmds[1]
+    assert str(mb_whl) in pip_cmds[1]
+
+    # Also verify source avoids --no-index anywhere and uses --no-build-isolation on pip download
+    src_txt = Path(rcs.__file__).read_text(encoding="utf-8")
+    assert "--no-index" not in src_txt
+    assert '"--no-build-isolation"' in src_txt
