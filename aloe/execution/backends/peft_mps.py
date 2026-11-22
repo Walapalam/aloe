@@ -1110,6 +1110,7 @@ class PeftMPSBackend:
                     input_ids=input_ids,
                     attention_mask=attention_mask,
                     labels=labels,
+                    use_cache=False,
                 )
                 raw_loss = outputs.loss
                 if not torch.isfinite(raw_loss):
@@ -1117,8 +1118,11 @@ class PeftMPSBackend:
                     raise RuntimeError(f"Non-finite training loss at step {step}: {raw_loss.item()}")
 
                 scaled_loss = raw_loss / float(grad_accum)
+                loss_val = float(raw_loss.item())
+                del outputs, raw_loss
                 scaled_loss.backward()
-                accum_loss += float(raw_loss.item()) / float(grad_accum)
+                del scaled_loss
+                accum_loss += loss_val / float(grad_accum)
                 examples_seen += int(input_ids.shape[0])
 
             if config.training.max_grad_norm > 0:
@@ -1132,6 +1136,8 @@ class PeftMPSBackend:
             ):
                 peft_model.base_model.update_and_allocate(step + 1)
             scheduler.step()
+            if device == "mps" and hasattr(torch, "mps") and hasattr(torch.mps, "empty_cache"):
+                torch.mps.empty_cache()
 
             step_durations.append(time.time() - step_t0)
             losses.append(accum_loss)
