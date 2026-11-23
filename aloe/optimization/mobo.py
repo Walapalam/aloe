@@ -215,7 +215,16 @@ class MOBOptimizer:
             mll = ExactMarginalLogLikelihood(gp.likelihood, gp)
             try:
                 if has_variance:
-                    fit_gpytorch_mll(mll)
+                    try:
+                        fit_gpytorch_mll(mll)
+                    except Exception:
+                        from botorch.optim.fit import fit_gpytorch_mll_torch  # type: ignore
+
+                        fit_gpytorch_mll(
+                            mll,
+                            optimizer=fit_gpytorch_mll_torch,
+                            optimizer_kwargs={"step_limit": 500},
+                        )
             except Exception as e:
                 if not self.allow_fallback:
                     raise RuntimeError(f"Official MOBO GP MLL fitting failed on objective {i}: {e}") from e

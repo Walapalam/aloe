@@ -340,3 +340,20 @@ def test_wheel_installer_never_uses_no_index_and_passes_no_deps_and_no_build_iso
     src_txt = Path(rcs.__file__).read_text(encoding="utf-8")
     assert "--no-index" not in src_txt
     assert '"--no-build-isolation"' in src_txt
+
+
+def test_disable_lfm3_broken_triton_conv_patches_shortconv_globals() -> None:
+    from aloe.datasets.model_registry import ModelRegistry
+
+    reg = ModelRegistry()
+    cfg = reg.load_config_from_hub_or_path("LiquidAI/LFM3-1.7B")
+    meta_model = reg.load_model_meta_from_config(cfg)
+    count = ModelRegistry.disable_lfm3_broken_triton_conv(meta_model)
+    assert count > 0
+    for sub in meta_model.modules():
+        if type(sub).__name__ == "Lfm3ShortConv":
+            fwd = getattr(sub.__class__, "forward")
+            while hasattr(fwd, "__wrapped__"):
+                fwd = fwd.__wrapped__
+            assert fwd.__globals__["can_use_lfm3_conv"](None, None) is False
+

@@ -351,6 +351,7 @@ def evaluate_model_on_split(
             )
     completed_ids = {rec.sample_id for rec in existing_records}
 
+    ModelRegistry.disable_lfm3_broken_triton_conv(model)
     model.eval()
     raw_pad = getattr(tokenizer, "pad_token_id", None)
     raw_eos = getattr(tokenizer, "eos_token_id", None)
@@ -833,6 +834,7 @@ class PeftMPSBackend:
                 **rev_kwargs,
             ).to(device)
             created_base = True
+        ModelRegistry.disable_lfm3_broken_triton_conv(base_model)
 
         if tokenizer is None:
             tokenizer = AutoTokenizer.from_pretrained(

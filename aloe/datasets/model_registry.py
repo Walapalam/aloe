@@ -182,6 +182,32 @@ class ModelRegistry:
         except Exception:  # noqa: BLE001
             pass
 
+    @staticmethod
+    def disable_lfm3_broken_triton_conv(model: Any = None) -> int:
+        """Disable upstream LFM3 CUDA Triton `_decode` conv kernel (corrupts CUDA generate() on Triton >=3.5).
+
+        Forces `Lfm3ShortConv` to execute standard PyTorch `nn.Conv1d` (`self._conv`) during inference,
+        matching the exact training forward path.
+        """
+        import sys as _sys
+
+        patched = 0
+        for mod_name, mod_obj in list(_sys.modules.items()):
+            if mod_obj is not None and ("modeling_lfm3" in mod_name or "lfm3_conv" in mod_name):
+                if hasattr(mod_obj, "can_use_lfm3_conv"):
+                    setattr(mod_obj, "can_use_lfm3_conv", lambda *_a, **_k: False)
+                    patched += 1
+        if model is not None and hasattr(model, "modules"):
+            for sub in model.modules():
+                if type(sub).__name__ == "Lfm3ShortConv":
+                    fwd = getattr(sub.__class__, "forward", None)
+                    while hasattr(fwd, "__wrapped__"):
+                        fwd = fwd.__wrapped__
+                    if fwd is not None and hasattr(fwd, "__globals__") and "can_use_lfm3_conv" in fwd.__globals__:
+                        fwd.__globals__["can_use_lfm3_conv"] = lambda *_a, **_k: False
+                        patched += 1
+        return patched
+
     def load_config(self, model_id_or_slug: str, **kwargs: Any) -> Any:
         """Load transformers AutoConfig for the model from the local snapshot."""
         from transformers import AutoConfig
