@@ -357,3 +357,9 @@ def test_disable_lfm3_broken_triton_conv_patches_shortconv_globals() -> None:
                 fwd = fwd.__wrapped__
             assert fwd.__globals__["can_use_lfm3_conv"](None, None) is False
 
+    import aloe.execution.backends.peft_mps as pm_mod
+    pm_src = Path(pm_mod.__file__).read_text(encoding="utf-8")
+    assert 'gen_use_cache = False if "lfm3" in model_id.lower() else True' in pm_src
+    assert "use_cache=gen_use_cache" in pm_src
+
+

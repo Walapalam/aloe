@@ -370,6 +370,7 @@ def evaluate_model_on_split(
 
         inp = torch.tensor([enc_ids], dtype=torch.long, device=device)
         attn = torch.ones_like(inp, device=device)
+        gen_use_cache = False if "lfm3" in model_id.lower() else True
         with torch.no_grad():
             gen_out = model.generate(
                 input_ids=inp,
@@ -377,6 +378,7 @@ def evaluate_model_on_split(
                 max_new_tokens=max_new_tokens,
                 do_sample=False,
                 pad_token_id=pad_id,
+                use_cache=gen_use_cache,
             )
         gen_tokens = gen_out[0, inp.shape[1] :]
         raw_text = tokenizer.decode(gen_tokens, skip_special_tokens=True).strip()
