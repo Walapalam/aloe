@@ -36,7 +36,7 @@ EXPECTED_CUDA_MODELS = {
 
 EXPECTED_GIT_PINS = {
     "tiiuae--Falcon-H1-1.5B-Instruct": "f0d0ea2b56b441e18d475366ea249617afe65883",
-    "LiquidAI--LFM3-1.7B": "f38cef8d18ea92c3629d9fdbbf4d75e911ff16b6",
+    "LiquidAI--LFM3-1.7B": "ab9877ce5110f3889d2d2f028a4d3ff559bd48b2",
     "google--gemma-4-E2B-it": "8187255cae076f583dce455acaf5019b20bad1e4",
 }
 

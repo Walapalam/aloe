@@ -9,7 +9,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = REPO_ROOT / "notebooks" / "colab_shards"
 
 FALCON_SHA = "f0d0ea2b56b441e18d475366ea249617afe65883"
-LFM3_SHA = "f38cef8d18ea92c3629d9fdbbf4d75e911ff16b6"
+LFM3_SHA = "ab9877ce5110f3889d2d2f028a4d3ff559bd48b2"
 
 SHARDS = [
     {
