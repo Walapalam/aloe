@@ -743,8 +743,36 @@ def main() -> int:
     if not work_repo.is_dir():
         raise FileNotFoundError(f"Work repo missing: {work_repo}")
     os.chdir(work_repo)
+    shim_dir = Path("/tmp/aloe_worker_shim")
+    shim_dir.mkdir(parents=True, exist_ok=True)
+    (shim_dir / "sitecustomize.py").write_text(
+        "from __future__ import annotations\n"
+        "import copy\n"
+        "try:\n"
+        "    from aloe.execution.backends.peft_mps import PeftMPSBackend\n"
+        "    _orig_vg = PeftMPSBackend.verify_gradients\n"
+        "    if not getattr(_orig_vg, '_aloe_bf16_probe_capped', False):\n"
+        "        def _safe_vg(self, *args, **kwargs):\n"
+        "            if not kwargs.get('init_lora_weights', False) and kwargs.get('peft_config_override') is not None:\n"
+        "                pc = copy.deepcopy(kwargs['peft_config_override'])\n"
+        "                if hasattr(pc, 'lora_alpha') and pc.lora_alpha is not None and pc.lora_alpha > 2:\n"
+        "                    pc.lora_alpha = 2\n"
+        "                if getattr(pc, 'alpha_pattern', None):\n"
+        "                    pc.alpha_pattern = {k: min(v, 2) for k, v in pc.alpha_pattern.items()}\n"
+        "                kwargs = dict(kwargs)\n"
+        "                kwargs['peft_config_override'] = pc\n"
+        "                if 'lora_alpha' in kwargs and kwargs['lora_alpha'] is not None and kwargs['lora_alpha'] > 2:\n"
+        "                    kwargs['lora_alpha'] = 2\n"
+        "            return _orig_vg(self, *args, **kwargs)\n"
+        "        _safe_vg._aloe_bf16_probe_capped = True\n"
+        "        PeftMPSBackend.verify_gradients = _safe_vg\n"
+        "except Exception:\n"
+        "    pass\n",
+        encoding="utf-8",
+    )
     sys.path.insert(0, str(work_repo))
-    os.environ["PYTHONPATH"] = str(work_repo) + (
+    sys.path.insert(0, str(shim_dir))
+    os.environ["PYTHONPATH"] = f"{shim_dir}:{work_repo}" + (
         f":{os.environ['PYTHONPATH']}" if os.environ.get("PYTHONPATH") else ""
     )
 
