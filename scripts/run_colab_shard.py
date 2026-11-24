@@ -581,6 +581,32 @@ def main() -> int:
         f":{os.environ['PYTHONPATH']}" if os.environ.get("PYTHONPATH") else ""
     )
 
+    import botorch.fit as _bt_fit
+    from botorch.optim.fit import fit_gpytorch_mll_torch as _fit_mll_torch
+
+    _orig_fit_mll = _bt_fit.fit_gpytorch_mll
+
+    def _resilient_fit_gpytorch_mll(mll, *f_args, **f_kwargs):
+        try:
+            return _orig_fit_mll(mll, *f_args, **f_kwargs)
+        except Exception as fit_exc:
+            if "optimizer" in f_kwargs:
+                raise
+            print(
+                f"[MOBO GP FALLBACK] SciPy L-BFGS-B MLL fit hit {fit_exc}; "
+                "refitting exact Matern-5/2 ARD GP via fit_gpytorch_mll_torch (Adam, 500 steps)...",
+                flush=True,
+            )
+            return _orig_fit_mll(
+                mll,
+                *f_args,
+                optimizer=_fit_mll_torch,
+                optimizer_kwargs={"step_limit": 500},
+                **f_kwargs,
+            )
+
+    _bt_fit.fit_gpytorch_mll = _resilient_fit_gpytorch_mll
+
     from huggingface_hub import CommitOperationAdd, HfApi, snapshot_download
     from aloe.evaluation.resources import enforce_hardware_contract
     from aloe.execution.campaign_runner import CampaignRunner, compute_exact_feasible_pool
