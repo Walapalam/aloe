@@ -535,6 +535,167 @@ def _ensure_raw_xlam(work_repo: Path, *, api: Any, hf_repo: str) -> Path:
     return raw_dest
 
 
+def _run_zero_shot_validation_subprocess(
+    *,
+    work_repo: Path,
+    model_id: str,
+    manifest_rel: str,
+    raw_rel: str,
+    out_dir: Path,
+    expected_git_sha: str,
+    manifest_sha: str,
+    val_ids: set[str],
+    pinned_gpu: str,
+    exact_gpu_name: str,
+    allow_slow_kernels: bool,
+) -> dict[str, Any]:
+    """Evaluate unmodified base instruct model (`0` LoRA adapters) on the 200-item validation split in an isolated subprocess."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    receipt_file = out_dir / "zero_shot_validation.json"
+    pred_file = out_dir / "predictions_validation.jsonl"
+    if receipt_file.is_file() and pred_file.is_file():
+        try:
+            cached = json.loads(receipt_file.read_text(encoding="utf-8"))
+            lines = [json.loads(ln) for ln in pred_file.read_text(encoding="utf-8").splitlines() if ln.strip()]
+            seen_ids = {str(r.get("sample_id")) for r in lines}
+            if (
+                cached.get("git_commit") == expected_git_sha
+                and cached.get("manifest_sha256") == manifest_sha
+                and cached.get("gpu_name") == exact_gpu_name
+                and seen_ids == val_ids
+                and len(lines) == len(val_ids)
+            ):
+                print(
+                    f"[ZERO-SHOT CACHED] {model_id} EM={cached['exact_match_accuracy']:.2%}",
+                    flush=True,
+                )
+                return cached
+        except Exception:
+            pass
+
+    inline_py = """
+import json, sys, time
+from pathlib import Path
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from aloe.datasets.model_registry import ModelRegistry
+from aloe.datasets.xlam import load_xlam_file
+from aloe.evaluation.prediction_store import PredictionStore
+from aloe.evaluation.resources import enforce_hardware_contract
+from aloe.evaluation.tool_calling import EVALUATOR_VERSION
+from aloe.execution.backends.peft_mps import evaluate_model_on_split
+from aloe.tracking.trial_store import atomic_write_text, get_git_commit
+
+cfg = json.loads(sys.argv[1])
+work_repo = Path(cfg["work_repo"]).resolve()
+git_sha = get_git_commit(work_repo, forbid_dirty=True)
+assert git_sha == cfg["expected_git_sha"], f"Git SHA mismatch: {git_sha} != {cfg['expected_git_sha']}"
+
+hw = enforce_hardware_contract(
+    cfg["model_id"],
+    "cuda",
+    pinned_gpu=cfg["pinned_gpu"],
+    exact_gpu_name=cfg["exact_gpu_name"],
+    official_campaign=True,
+    allow_slow_kernels=bool(cfg["allow_slow_kernels"]),
+)
+
+registry = ModelRegistry()
+canonical_id = cfg["model_id"]
+for alias, target in registry.ALIASES.items():
+    if canonical_id.lower() == alias:
+        canonical_id = target
+        break
+pinned_rev = registry.PINNED_REVISIONS.get(canonical_id, "main")
+rev_kw = {"revision": pinned_rev} if pinned_rev not in ("main", "UNKNOWN", "") else {}
+
+manifest = json.loads((work_repo / cfg["manifest_rel"]).read_text(encoding="utf-8"))
+val_ids = [str(i) for i in manifest["splits"]["validation"]["ids"]]
+raw_examples = load_xlam_file(work_repo / cfg["raw_rel"])
+id_to_ex = {str(ex.id): ex for ex in raw_examples}
+val_examples = [id_to_ex[sid] for sid in sorted(val_ids)]
+
+if hasattr(ModelRegistry, "_ensure_lfm3_rope_compat"):
+    ModelRegistry._ensure_lfm3_rope_compat()
+torch.cuda.empty_cache()
+torch.cuda.reset_peak_memory_stats()
+t0 = time.time()
+model = AutoModelForCausalLM.from_pretrained(
+    canonical_id,
+    torch_dtype=torch.bfloat16,
+    trust_remote_code=True,
+    **rev_kw,
+).to("cuda")
+if hasattr(ModelRegistry, "disable_lfm3_broken_triton_conv"):
+    ModelRegistry.disable_lfm3_broken_triton_conv(model)
+tokenizer = AutoTokenizer.from_pretrained(canonical_id, trust_remote_code=True, **rev_kw)
+if getattr(tokenizer, "pad_token", None) is None and getattr(tokenizer, "eos_token", None) is not None:
+    tokenizer.pad_token = tokenizer.eos_token
+
+out_dir = Path(cfg["out_dir"]).resolve()
+out_dir.mkdir(parents=True, exist_ok=True)
+slug = canonical_id.replace("/", "--")
+pred_store = PredictionStore(out_dir / "predictions_validation.jsonl")
+ev_out = evaluate_model_on_split(
+    model,
+    tokenizer,
+    val_examples,
+    prediction_store=pred_store,
+    split_name="validation",
+    model_id=canonical_id,
+    model_revision=pinned_rev,
+    arm="zero_shot",
+    trial_id=f"zero_shot_{slug}_validation",
+    seed=42,
+    device="cuda",
+    max_new_tokens=192,
+)
+peak_cuda_mb = round(torch.cuda.max_memory_allocated() / (1024 ** 2), 3)
+summary = ev_out["summary"]
+receipt = {
+    "protocol_tag": "protocol-v1",
+    "mode": "zero_shot_base_validation",
+    "model_id": canonical_id,
+    "model_revision": pinned_rev,
+    "arm": "zero_shot",
+    "split": "validation",
+    "sample_count": int(summary["total_samples"]),
+    "exact_match_accuracy": float(summary["exact_match_accuracy"]),
+    "lenient_exact_match_accuracy": float(summary.get("lenient_exact_match_accuracy", summary["exact_match_accuracy"])),
+    "tool_name_accuracy": float(summary.get("tool_match_rate", 0.0)),
+    "parse_success_rate": float(summary.get("parse_success_rate", 0.0)),
+    "schema_valid_rate": float(summary.get("schema_valid_rate", 0.0)),
+    "trainable_parameters": 0,
+    "peak_cuda_allocated_mb": peak_cuda_mb,
+    "wall_seconds": round(time.time() - t0, 3),
+    "eval_seconds": float(ev_out["eval_seconds"]),
+    "predictions_sha256": str(ev_out["predictions_sha256"]),
+    "evaluator_version": EVALUATOR_VERSION,
+    "manifest_sha256": cfg["manifest_sha"],
+    "git_commit": git_sha,
+    "gpu_name": str(hw["gpu_name"]),
+    "hardware_label": str(hw["hardware_label"]),
+}
+atomic_write_text(out_dir / "zero_shot_validation.json", json.dumps(receipt, indent=2) + "\\n")
+"""
+    payload = json.dumps(
+        {
+            "work_repo": str(work_repo),
+            "model_id": model_id,
+            "manifest_rel": manifest_rel,
+            "raw_rel": raw_rel,
+            "out_dir": str(out_dir),
+            "expected_git_sha": expected_git_sha,
+            "manifest_sha": manifest_sha,
+            "pinned_gpu": pinned_gpu,
+            "exact_gpu_name": exact_gpu_name,
+            "allow_slow_kernels": allow_slow_kernels,
+        }
+    )
+    subprocess.run([sys.executable, "-c", inline_py, payload], cwd=str(work_repo), check=True)
+    return json.loads(receipt_file.read_text(encoding="utf-8"))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run isolated per-arm ALOE shard on Colab Pro+ L4")
     parser.add_argument("--shard-id", required=True)
@@ -542,8 +703,11 @@ def main() -> int:
     parser.add_argument("--work-repo", required=True, help="Clean checkout pinned to --expected-git-sha")
     parser.add_argument("--expected-git-sha", required=True, help="Exact 40-char commit SHA required for model parity")
     parser.add_argument("--arms", required=True, help="Comma-separated arms owned by this shard")
-    parser.add_argument("--phases", default="search,confirm", help="Comma-separated phases: search,confirm")
+    parser.add_argument("--phases", default="search,confirm", help="Comma-separated phases: zero_shot,search,confirm")
     parser.add_argument("--search-seed", type=int, default=42)
+    parser.add_argument("--campaign-prefix", default="", help="Optional isolated HF campaign prefix (e.g. campaigns_cuda_supplementary)")
+    parser.add_argument("--confirm-prefix", default="", help="Optional isolated HF confirm prefix (e.g. confirm_3seed_cuda_supplementary)")
+    parser.add_argument("--allow-supplementary-cuda", action="store_true", help="Permit supplementary CUDA run for local-tier model in isolated prefix")
     parser.add_argument("--pinned-gpu", default="L4")
     parser.add_argument("--expected-exact-gpu", default="NVIDIA L4")
     parser.add_argument("--hf-repo", default="Walapalam/aloe-ipd-v1-runs")
@@ -626,9 +790,17 @@ def main() -> int:
     api = HfApi(token=hf_token)
     arm_list = [a.strip() for a in args.arms.split(",") if a.strip()]
     phase_list = [p.strip() for p in args.phases.split(",") if p.strip()]
-    invalid_phases = set(phase_list) - {"search", "confirm"}
+    invalid_phases = set(phase_list) - {"zero_shot", "search", "confirm"}
     if invalid_phases:
         raise ValueError(f"Unsupported shard phases {sorted(invalid_phases)} (sealed final-test is blocked here).")
+    if args.allow_supplementary_cuda:
+        is_isolated_prefix = bool(args.campaign_prefix and args.campaign_prefix.strip() not in ("campaigns", "campaigns_multiseed"))
+        is_zero_shot_only = set(phase_list) == {"zero_shot"}
+        if not (is_isolated_prefix or is_zero_shot_only):
+            raise ValueError(
+                "--allow-supplementary-cuda requires an isolated --campaign-prefix "
+                "(e.g. campaigns_cuda_supplementary) so canonical campaigns/ are never touched."
+            )
 
     syncer = HfShardSyncer(
         api=api,
@@ -644,7 +816,16 @@ def main() -> int:
     try:
         local_store = Path(args.local_store).resolve()
         local_store.mkdir(parents=True, exist_ok=True)
-        campaign_prefix = "campaigns" if args.search_seed == 42 else f"campaigns_multiseed/seed_{args.search_seed}"
+        if args.campaign_prefix and args.campaign_prefix.strip():
+            campaign_prefix = args.campaign_prefix.strip().strip("/")
+        else:
+            campaign_prefix = "campaigns" if args.search_seed == 42 else f"campaigns_multiseed/seed_{args.search_seed}"
+        confirm_prefix = (
+            args.confirm_prefix.strip().strip("/")
+            if (args.confirm_prefix and args.confirm_prefix.strip())
+            else "confirm_3seed"
+        )
+        allow_slow_flag = bool(args.allow_supplementary_cuda)
 
         # Step 3: Download cached CUDA wheels & install fast hybrid kernels
         snapshot_download(
@@ -690,10 +871,12 @@ def main() -> int:
         baseline_params = int(parity_info["baseline_params"])
 
         allow_pats = [f"{campaign_prefix}/{slug}/hardware_lock.json"]
+        if "zero_shot" in phase_list:
+            allow_pats.append(f"zero_shot_baselines/{slug}/**")
         for a in active_arms:
             allow_pats.append(f"{campaign_prefix}/{slug}/{a}/**")
             if "confirm" in phase_list and args.search_seed == 42:
-                allow_pats.append(f"confirm_3seed/{slug}/{a}/**")
+                allow_pats.append(f"{confirm_prefix}/{slug}/{a}/**")
         snapshot_download(
             repo_id=args.hf_repo,
             repo_type="dataset",
@@ -707,37 +890,38 @@ def main() -> int:
         for a in active_arms:
             verify_arm_git_commits(local_store / campaign_prefix / slug / a, args.expected_git_sha)
             if "confirm" in phase_list and args.search_seed == 42:
-                verify_arm_git_commits(local_store / "confirm_3seed" / slug / a, args.expected_git_sha)
+                verify_arm_git_commits(local_store / confirm_prefix / slug / a, args.expected_git_sha)
 
-        # Pre-write & enforce hardware_lock.json == NVIDIA L4
+        # Pre-write & enforce hardware_lock.json == NVIDIA L4 (when running search/confirm)
         hw_lock_file = local_store / campaign_prefix / slug / "hardware_lock.json"
-        if hw_lock_file.is_file():
-            lock_meta = json.loads(hw_lock_file.read_text(encoding="utf-8"))
-            if lock_meta.get("locked_gpu_name") != args.expected_exact_gpu:
-                raise RuntimeError(f"Existing hardware_lock.json mismatch: {lock_meta}")
-        else:
-            lock_payload = (
-                json.dumps(
-                    {
-                        "model_id": desc.model_id,
-                        "locked_gpu_name": args.expected_exact_gpu,
-                        "locked_memory_metric_name": "cuda_max_memory_allocated",
-                    },
-                    indent=2,
-                )
-                + "\n"
-            )
-            atomic_write_text(hw_lock_file, lock_payload)
-            syncer._cas_commit_owned(
-                [
-                    CommitOperationAdd(
-                        path_in_repo=f"{campaign_prefix}/{slug}/hardware_lock.json",
-                        path_or_fileobj=io.BytesIO(lock_payload.encode("utf-8")),
+        if ("search" in phase_list) or ("confirm" in phase_list):
+            if hw_lock_file.is_file():
+                lock_meta = json.loads(hw_lock_file.read_text(encoding="utf-8"))
+                if lock_meta.get("locked_gpu_name") != args.expected_exact_gpu:
+                    raise RuntimeError(f"Existing hardware_lock.json mismatch: {lock_meta}")
+            else:
+                lock_payload = (
+                    json.dumps(
+                        {
+                            "model_id": desc.model_id,
+                            "locked_gpu_name": args.expected_exact_gpu,
+                            "locked_memory_metric_name": "cuda_max_memory_allocated",
+                        },
+                        indent=2,
                     )
-                ],
-                status="ACTIVE",
-                commit_label=f"[lock] {slug} locked to {args.expected_exact_gpu}",
-            )
+                    + "\n"
+                )
+                atomic_write_text(hw_lock_file, lock_payload)
+                syncer._cas_commit_owned(
+                    [
+                        CommitOperationAdd(
+                            path_in_repo=f"{campaign_prefix}/{slug}/hardware_lock.json",
+                            path_or_fileobj=io.BytesIO(lock_payload.encode("utf-8")),
+                        )
+                    ],
+                    status="ACTIVE",
+                    commit_label=f"[lock] {slug} locked to {args.expected_exact_gpu}",
+                )
 
         hw = enforce_hardware_contract(
             args.model,
@@ -745,13 +929,43 @@ def main() -> int:
             pinned_gpu=args.pinned_gpu,
             exact_gpu_name=args.expected_exact_gpu,
             official_campaign=True,
+            allow_slow_kernels=allow_slow_flag,
         )
         exact_gpu_name = str(hw["gpu_name"])
         print(
             f"[SHARD LIVE] shard={args.shard_id} | GPU verified: {hw['hardware_label']} | "
-            f"arms={active_arms} | phases={phase_list} | Starting trials...",
+            f"arms={active_arms} | phases={phase_list} | prefix={campaign_prefix} | Starting trials...",
             flush=True,
         )
+
+        # Phase 0: Optional Base Zero-Shot Pre-Fine-Tuning Validation Baseline (isolated subprocess)
+        if "zero_shot" in phase_list:
+            zs_mirror_dir = local_store / "zero_shot_baselines" / slug
+            print(f"\n=== [SHARD ZERO-SHOT] {desc.model_id} :: validation (200 items, 0 adapters) ===", flush=True)
+            zs_receipt = _run_zero_shot_validation_subprocess(
+                work_repo=work_repo,
+                model_id=desc.model_id,
+                manifest_rel=manifest_rel,
+                raw_rel=raw_rel,
+                out_dir=zs_mirror_dir,
+                expected_git_sha=args.expected_git_sha,
+                manifest_sha=manifest_sha,
+                val_ids=split_id_sets["validation"],
+                pinned_gpu=args.pinned_gpu,
+                exact_gpu_name=exact_gpu_name,
+                allow_slow_kernels=allow_slow_flag,
+            )
+            syncer.push_arm_delta(
+                zs_mirror_dir,
+                f"zero_shot_baselines/{slug}",
+                commit_label=f"[{args.shard_id}] zero_shot {slug} EM={zs_receipt['exact_match_accuracy']:.2%}",
+                strict=True,
+            )
+            print(
+                f"[ZERO-SHOT VERIFIED] {desc.model_id} EM={zs_receipt['exact_match_accuracy']:.2%} "
+                f"peak_cuda={zs_receipt['peak_cuda_allocated_mb']:.1f} MB",
+                flush=True,
+            )
 
         # Phase 1: Search (hook AFTER ledger.save marks DONE so preempted runs never re-run DONE trials!)
         if "search" in phase_list:
@@ -779,6 +993,7 @@ def main() -> int:
                     exact_gpu_name=exact_gpu_name,
                     hardware_lock_path=hw_lock_file,
                     official_campaign=True,
+                    allow_slow_kernels=allow_slow_flag,
                     forbid_dirty_git=True,
                     use_subprocess_worker=True,
                     mirror_dir=mirror_dir,
@@ -841,12 +1056,12 @@ def main() -> int:
                     flush=True,
                 )
 
-        # Phase 2: 3-Seed Validation Confirmation (only for canonical search_seed == 42)
+        # Phase 2: 3-Seed Validation Confirmation (only for search_seed == 42)
         if "confirm" in phase_list:
             if args.search_seed != 42:
-                raise ValueError("3-seed confirmation applies strictly to canonical search_seed=42.")
+                raise ValueError("3-seed confirmation applies strictly to search_seed=42.")
             for arm in active_arms:
-                arm_mirror_dir = local_store / "campaigns" / slug / arm
+                arm_mirror_dir = local_store / campaign_prefix / slug / arm
                 verify_campaign_dir(
                     arm_mirror_dir,
                     expected_manifest_sha=manifest_sha,
@@ -861,11 +1076,11 @@ def main() -> int:
                 wcfg = TrialConfig.model_validate(sdata["selected_winner_config"])
                 locked_dump = wcfg.model_dump(mode="json")
 
-                local_trials_dir = work_repo / "runs" / "confirm_3seed" / slug / arm / "trials"
-                mirror_arm_confirm = local_store / "confirm_3seed" / slug / arm
+                local_trials_dir = work_repo / "runs" / confirm_prefix / slug / arm / "trials"
+                mirror_arm_confirm = local_store / confirm_prefix / slug / arm
                 mirror_trials_dir = mirror_arm_confirm / "trials"
                 local_trials_dir.mkdir(parents=True, exist_ok=True)
-                repo_confirm_prefix = f"confirm_3seed/{slug}/{arm}"
+                repo_confirm_prefix = f"{confirm_prefix}/{slug}/{arm}"
 
                 for s_val in REQUIRED_CONFIRM_SEEDS:
                     tid = f"{arm}_winner_s{s_val}_validation"
@@ -917,6 +1132,8 @@ def main() -> int:
                         "--mirror-dir",
                         str(mirror_trials_dir),
                     ]
+                    if allow_slow_flag:
+                        cmd.append("--allow-slow-kernels")
                     if seeded_cfg.peft_method == "lora":
                         cmd.append("--enforce-parity")
 

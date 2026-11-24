@@ -10,6 +10,7 @@ OUT_DIR = REPO_ROOT / "notebooks" / "colab_shards"
 
 FALCON_SHA = "f0d0ea2b56b441e18d475366ea249617afe65883"
 LFM3_SHA = "ab9877ce5110f3889d2d2f028a4d3ff559bd48b2"
+GEMMA_SHA = "8187255cae076f583dce455acaf5019b20bad1e4"
 
 SHARDS = [
     {
@@ -100,6 +101,67 @@ SHARDS = [
         "search_seed": 2026,
         "eta": "~10h on 1x NVIDIA L4 (optional bonus search seed)",
     },
+    {
+        "filename": "L5_lfm3_seed1337_aloe_b1.ipynb",
+        "title": "ALOE Shard L5 — LiquidAI/LFM3-1.7B Zero-Shot + Extra Search Seed 1337 (aloe, b1 | NVIDIA L4)",
+        "shard_id": "L5_lfm3_seed1337_aloe_b1",
+        "model": "LiquidAI/LFM3-1.7B",
+        "pinned_sha": LFM3_SHA,
+        "arms": "aloe,b1",
+        "phases": "zero_shot,search",
+        "search_seed": 1337,
+        "eta": "~10h on 1x NVIDIA L4 (Zero-Shot + Paired Seed 1337)",
+    },
+    {
+        "filename": "L6_lfm3_seed2026_aloe_b1.ipynb",
+        "title": "ALOE Shard L6 — LiquidAI/LFM3-1.7B Extra Search Seed 2026 (aloe, b1 | NVIDIA L4)",
+        "shard_id": "L6_lfm3_seed2026_aloe_b1",
+        "model": "LiquidAI/LFM3-1.7B",
+        "pinned_sha": LFM3_SHA,
+        "arms": "aloe,b1",
+        "phases": "search",
+        "search_seed": 2026,
+        "eta": "~10h on 1x NVIDIA L4 (Paired Seed 2026)",
+    },
+    {
+        "filename": "Z1_falcon_zero_shot.ipynb",
+        "title": "ALOE Shard Z1 — Falcon-H1-1.5B Base Zero-Shot Validation Baseline (NVIDIA L4)",
+        "shard_id": "Z1_falcon_zero_shot",
+        "model": "tiiuae/Falcon-H1-1.5B-Instruct",
+        "pinned_sha": FALCON_SHA,
+        "arms": "aloe",
+        "phases": "zero_shot",
+        "search_seed": 42,
+        "eta": "~5m on 1x NVIDIA L4",
+    },
+    {
+        "filename": "G1_gemma_cuda_supp_aloe_b0_b1.ipynb",
+        "title": "ALOE Supplementary Shard G1 — Gemma-4-E2B CUDA Cross-Check (zero_shot + aloe, b0, b1 | NVIDIA L4)",
+        "shard_id": "G1_gemma_cuda_supp_aloe_b0_b1",
+        "model": "google/gemma-4-E2B-it",
+        "pinned_sha": GEMMA_SHA,
+        "arms": "aloe,b0,b1",
+        "phases": "zero_shot,search,confirm",
+        "search_seed": 42,
+        "campaign_prefix": "campaigns_cuda_supplementary",
+        "confirm_prefix": "confirm_3seed_cuda_supplementary",
+        "allow_supplementary_cuda": True,
+        "eta": "~12h on 1x NVIDIA L4 (isolated CUDA supplementary)",
+    },
+    {
+        "filename": "G2_gemma_cuda_supp_b2_borobia.ipynb",
+        "title": "ALOE Supplementary Shard G2 — Gemma-4-E2B CUDA Cross-Check (b2, borobia_attn, borobia_ffn | NVIDIA L4)",
+        "shard_id": "G2_gemma_cuda_supp_b2_borobia",
+        "model": "google/gemma-4-E2B-it",
+        "pinned_sha": GEMMA_SHA,
+        "arms": "b2,borobia_attn,borobia_ffn",
+        "phases": "search,confirm",
+        "search_seed": 42,
+        "campaign_prefix": "campaigns_cuda_supplementary",
+        "confirm_prefix": "confirm_3seed_cuda_supplementary",
+        "allow_supplementary_cuda": True,
+        "eta": "~9h on 1x NVIDIA L4 (isolated CUDA supplementary)",
+    },
 ]
 
 
@@ -115,6 +177,16 @@ def generate_all(out_dir: Path = OUT_DIR) -> list[Path]:
         eta = spec["eta"]
         model = spec["model"]
         search_seed = spec["search_seed"]
+        campaign_prefix = spec.get("campaign_prefix", "")
+        confirm_prefix = spec.get("confirm_prefix", "")
+        allow_supp_cuda = bool(spec.get("allow_supplementary_cuda", False))
+        extra_cmd_lines: list[str] = []
+        if campaign_prefix:
+            extra_cmd_lines.append(f'        "--campaign-prefix", "{campaign_prefix}",\n')
+        if confirm_prefix:
+            extra_cmd_lines.append(f'        "--confirm-prefix", "{confirm_prefix}",\n')
+        if allow_supp_cuda:
+            extra_cmd_lines.append('        "--allow-supplementary-cuda",\n')
 
         md_lines = [
             f"# {title}\n",
@@ -206,6 +278,7 @@ def generate_all(out_dir: Path = OUT_DIR) -> list[Path]:
             f'        "--arms", "{arms}",\n',
             f'        "--phases", "{phases}",\n',
             f'        "--search-seed", "{search_seed}",\n',
+            *extra_cmd_lines,
             '        "--pinned-gpu", "L4",\n',
             '        "--expected-exact-gpu", "NVIDIA L4",\n',
             '        "--hf-repo", "Walapalam/aloe-ipd-v1-runs",\n',

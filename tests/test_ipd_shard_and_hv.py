@@ -246,7 +246,7 @@ def test_generated_colab_shard_notebooks_valid_ast_and_zero_secrets() -> None:
     from scripts.generate_colab_shard_notebooks import OUT_DIR, SHARDS
 
     home_prefix = "/" + "Users/"
-    assert len(SHARDS) == 8
+    assert len(SHARDS) == 13
     for spec in SHARDS:
         nb_path = OUT_DIR / str(spec["filename"])
         assert nb_path.is_file(), f"Missing {nb_path}"

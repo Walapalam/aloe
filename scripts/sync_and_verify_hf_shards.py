@@ -179,7 +179,15 @@ def sync_and_audit_once(
         repo_id=hf_repo,
         repo_type="dataset",
         local_dir=str(dest_dir),
-        allow_patterns=["leases/**", "campaigns/**", "campaigns_multiseed/**", "confirm_3seed/**"],
+        allow_patterns=[
+            "leases/**",
+            "campaigns/**",
+            "campaigns_multiseed/**",
+            "confirm_3seed/**",
+            "zero_shot_baselines/**",
+            "campaigns_cuda_supplementary/**",
+            "confirm_3seed_cuda_supplementary/**",
+        ],
         ignore_patterns=["**/checkpoint-*/*"],
         token=hf_token,
     )
@@ -220,6 +228,24 @@ def sync_and_audit_once(
                 split_id_sets=split_id_sets,
             )
 
+    zero_shot_report: dict[str, Any] = {}
+    zs_root = dest_dir / "zero_shot_baselines"
+    if zs_root.is_dir():
+        for zs_model_dir in sorted(p for p in zs_root.iterdir() if p.is_dir()):
+            zf = zs_model_dir / "zero_shot_validation.json"
+            if zf.is_file():
+                try:
+                    zero_shot_report[zs_model_dir.name] = json.loads(zf.read_text(encoding="utf-8"))
+                except Exception as exc:
+                    zero_shot_report[zs_model_dir.name] = {"error": str(exc)}
+
+    cuda_supp_report = _audit_campaigns_tree(
+        dest_dir / "campaigns_cuda_supplementary",
+        confirm_root=dest_dir / "confirm_3seed_cuda_supplementary",
+        manifest_sha=manifest_sha,
+        split_id_sets=split_id_sets,
+    )
+
     cuda_all_complete = True
     for exp_slug, exp_arms in EXPECTED_CUDA_MODELS.items():
         mrep = models_report.get(exp_slug, {}).get("arms", {})
@@ -234,6 +260,8 @@ def sync_and_audit_once(
         "leases": leases_report,
         "models": models_report,
         "multiseed": multiseed_report,
+        "zero_shot": zero_shot_report,
+        "cuda_supplementary": cuda_supp_report,
     }
     atomic_write_text(dest_dir / "sync_verification_status.json", json.dumps(report, indent=2) + "\n")
     return report
