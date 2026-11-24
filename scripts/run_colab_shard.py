@@ -651,7 +651,8 @@ ev_out = evaluate_model_on_split(
     max_new_tokens=192,
 )
 peak_cuda_mb = round(torch.cuda.max_memory_allocated() / (1024 ** 2), 3)
-summary = ev_out["summary"]
+raw_sum = ev_out["summary"]
+sdict = raw_sum.model_dump() if hasattr(raw_sum, "model_dump") else (raw_sum if isinstance(raw_sum, dict) else vars(raw_sum))
 receipt = {
     "protocol_tag": "protocol-v1",
     "mode": "zero_shot_base_validation",
@@ -659,12 +660,14 @@ receipt = {
     "model_revision": pinned_rev,
     "arm": "zero_shot",
     "split": "validation",
-    "sample_count": int(summary["total_samples"]),
-    "exact_match_accuracy": float(summary["exact_match_accuracy"]),
-    "lenient_exact_match_accuracy": float(summary.get("lenient_exact_match_accuracy", summary["exact_match_accuracy"])),
-    "tool_name_accuracy": float(summary.get("tool_match_rate", 0.0)),
-    "parse_success_rate": float(summary.get("parse_success_rate", 0.0)),
-    "schema_valid_rate": float(summary.get("schema_valid_rate", 0.0)),
+    "sample_count": int(sdict["total_samples"]),
+    "exact_match_accuracy": float(sdict["exact_match_accuracy"]),
+    "lenient_exact_match_accuracy": float(sdict.get("lenient_exact_match_accuracy", sdict["exact_match_accuracy"])),
+    "tool_name_accuracy": float(sdict.get("tool_selection_accuracy", sdict.get("tool_match_rate", 0.0))),
+    "argument_name_accuracy": float(sdict.get("argument_name_accuracy", 0.0)),
+    "argument_value_accuracy": float(sdict.get("argument_value_accuracy", 0.0)),
+    "parse_success_rate": float(sdict.get("parse_success_rate", 0.0)),
+    "schema_valid_rate": float(sdict.get("schema_valid_rate", 0.0)),
     "trainable_parameters": 0,
     "peak_cuda_allocated_mb": peak_cuda_mb,
     "wall_seconds": round(time.time() - t0, 3),
