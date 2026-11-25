@@ -723,6 +723,7 @@ def main() -> int:
         raise RuntimeError("HF_TOKEN environment variable is required.")
     os.environ["HF_TOKEN"] = hf_token
     os.environ["HUGGING_FACE_HUB_TOKEN"] = hf_token
+    os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
     # Step 1: Fail-closed GPU check (<1s before heavy imports/downloads)
     import torch
@@ -1005,6 +1006,18 @@ def main() -> int:
                 local_dir = work_repo / "runs" / "ipd_campaigns" / f"s{args.search_seed}" / slug / arm
                 mirror_dir = local_store / campaign_prefix / slug / arm
                 repo_arm_prefix = f"{campaign_prefix}/{slug}/{arm}"
+                if (local_dir / "campaign_ledger.json").is_file() and not (mirror_dir / "campaign_ledger.json").is_file():
+                    try:
+                        _ld = json.loads((local_dir / "campaign_ledger.json").read_text(encoding="utf-8"))
+                        if sum(1 for _e in _ld.get("entries", []) if _e.get("status") == "DONE") == 0:
+                            shutil.rmtree(local_dir, ignore_errors=True)
+                    except Exception:
+                        pass
+                base_tp = (
+                    TrainingParameters(max_steps=125, batch_size=1, gradient_accumulation_steps=8)
+                    if "gemma" in model_lower
+                    else TrainingParameters(max_steps=125)
+                )
                 print(
                     f"\n=== [SHARD SEARCH] {desc.model_id} :: arm={arm} (search_seed={args.search_seed}) ===",
                     flush=True,
@@ -1019,7 +1032,7 @@ def main() -> int:
                     training_seed=42,
                     manifest_path=manifest_rel,
                     raw_path=raw_rel,
-                    base_training=TrainingParameters(max_steps=125),
+                    base_training=base_tp,
                     pinned_gpu=args.pinned_gpu,
                     exact_gpu_name=exact_gpu_name,
                     hardware_lock_path=hw_lock_file,
