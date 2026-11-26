@@ -1,5 +1,9 @@
 {
-  "status": "PRE_UNSEAL_PENDING_USER_CEREMONY_APPROVAL",
-  "hf_seal_commit_oid": "",
-  "seal_sha256_by_model": {}
+  "status": "UNSEALED_PHASE_II_ACTIVE",
+  "hf_seal_commit_oid": "e5feb7e2e56552013812e24150bd1e5c95f9efcc",
+  "seal_sha256_by_model": {
+    "LiquidAI--LFM3-1.7B": "8d56b88d1ff598e4211130ffc1abb62270855c9859bfada3137f00f0d00f895b",
+    "google--gemma-4-E2B-it": "8b17e43292b483152e0f5997301a5046b6fc10bb06918def5233dfd689aa545c",
+    "tiiuae--Falcon-H1-1.5B-Instruct": "938312f08e7c1b6e575c66568dc15ccaf7249922b80959293e10813876c68026"
+  }
 }
