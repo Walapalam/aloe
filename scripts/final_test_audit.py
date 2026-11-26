@@ -568,8 +568,15 @@ def audit_final_test_attempts(
                         f"attempt seal_sha256 mismatch in {slug}/{jf.name}: got {rec_seal!r}, expected {exp_seal!r}"
                     )
                     continue
+                try:
+                    raw_seq = adata.get("seq", 1 if stg == "LAUNCHED" else 2)
+                    if isinstance(raw_seq, bool):
+                        raise ValueError("boolean seq invalid")
+                    seq_val = int(raw_seq)
+                except (TypeError, ValueError):
+                    unexpected_records.append(f"invalid attempt seq in {slug}/{jf.name}: {adata.get('seq')!r}")
+                    continue
                 counts[slug][rid][stg] += 1
-                seq_val = int(adata.get("seq", 1 if stg == "LAUNCHED" else 2))
                 records_by_run[slug][rid].append(
                     {
                         "attempt_id": aid,

@@ -1909,6 +1909,7 @@ def main() -> int:
                                 mirror_arm_final,
                                 repo_final_prefix,
                                 commit_label=f"[{args.shard_id}] final_sealed_test {slug}/{arm} s={s_val} PASS (cached sync)",
+                                strict=True,
                             )
                             if not _has_completed_attempt_local(local_store, slug, tid):
                                 open_aid = _find_open_launched_attempt_id(local_store, slug, tid)
@@ -2040,6 +2041,7 @@ def main() -> int:
                             mirror_arm_final,
                             repo_final_prefix,
                             commit_label=f"[{args.shard_id}] final_sealed_test {slug}/{arm} s={s_val} PASS",
+                            strict=True,
                         )
                         _log_final_test_attempt(
                             syncer,
