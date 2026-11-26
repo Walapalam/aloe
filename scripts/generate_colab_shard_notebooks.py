@@ -162,11 +162,49 @@ SHARDS = [
         "allow_supplementary_cuda": True,
         "eta": "~9h on 1x NVIDIA L4 (isolated CUDA supplementary)",
     },
+    {
+        "filename": "T1_falcon_final_test_aloe_b0_b1.ipynb",
+        "title": "ALOE Final Test T1 — Falcon-H1-1.5B Sealed 400-Item Test (zero_shot_test + aloe, b0, b1 | NVIDIA L4)",
+        "shard_id": "T1_falcon_final_test_aloe_b0_b1",
+        "model": "tiiuae/Falcon-H1-1.5B-Instruct",
+        "pinned_sha": FALCON_SHA,
+        "arms": "aloe,b0,b1",
+        "phases": "zero_shot_test,final_test",
+        "search_seed": 42,
+        "eta": "~4.5h on 1x NVIDIA L4 (requires pre-committed test_unsealed.json)",
+    },
+    {
+        "filename": "T2_falcon_final_test_b2_borobia.ipynb",
+        "title": "ALOE Final Test T2 — Falcon-H1-1.5B Sealed 400-Item Test (b2, borobia_attn, borobia_ssm, borobia_ffn | NVIDIA L4)",
+        "shard_id": "T2_falcon_final_test_b2_borobia",
+        "model": "tiiuae/Falcon-H1-1.5B-Instruct",
+        "pinned_sha": FALCON_SHA,
+        "arms": "b2,borobia_attn,borobia_ssm,borobia_ffn",
+        "phases": "final_test",
+        "search_seed": 42,
+        "eta": "~5.5h on 1x NVIDIA L4 (requires pre-committed test_unsealed.json)",
+    },
+    {
+        "filename": "T3_lfm3_final_test_all.ipynb",
+        "title": "ALOE Final Test T3 — LiquidAI/LFM3-1.7B Sealed 400-Item Test (zero_shot_test + all 7 arms | NVIDIA L4)",
+        "shard_id": "T3_lfm3_final_test_all",
+        "model": "LiquidAI/LFM3-1.7B",
+        "pinned_sha": LFM3_SHA,
+        "arms": "aloe,b0,b1,b2,borobia_attn,borobia_ssm,borobia_ffn",
+        "phases": "zero_shot_test,final_test",
+        "search_seed": 42,
+        "eta": "~5.5h on 1x NVIDIA L4 (requires pre-committed test_unsealed.json)",
+    },
 ]
 
 
 def generate_all(out_dir: Path = OUT_DIR) -> list[Path]:
     out_dir.mkdir(parents=True, exist_ok=True)
+    pins_path = REPO_ROOT / "docs" / "CEREMONY_PINS.json"
+    pins_data = json.loads(pins_path.read_text(encoding="utf-8")) if pins_path.is_file() else {}
+    seal_shas_by_slug = pins_data.get("seal_sha256_by_model") or {}
+    ceremony_oid = str(pins_data.get("hf_seal_commit_oid") or "")
+
     written: list[Path] = []
     for spec in SHARDS:
         title = spec["title"]
@@ -176,10 +214,12 @@ def generate_all(out_dir: Path = OUT_DIR) -> list[Path]:
         phases = spec["phases"]
         eta = spec["eta"]
         model = spec["model"]
+        slug = model.replace("/", "--")
         search_seed = spec["search_seed"]
         campaign_prefix = spec.get("campaign_prefix", "")
         confirm_prefix = spec.get("confirm_prefix", "")
         allow_supp_cuda = bool(spec.get("allow_supplementary_cuda", False))
+        expected_seal_sha = str(spec.get("expected_seal_sha256") or seal_shas_by_slug.get(slug, ""))
         extra_cmd_lines: list[str] = []
         if campaign_prefix:
             extra_cmd_lines.append(f'        "--campaign-prefix", "{campaign_prefix}",\n')
@@ -187,6 +227,10 @@ def generate_all(out_dir: Path = OUT_DIR) -> list[Path]:
             extra_cmd_lines.append(f'        "--confirm-prefix", "{confirm_prefix}",\n')
         if allow_supp_cuda:
             extra_cmd_lines.append('        "--allow-supplementary-cuda",\n')
+        if any(p in phases.split(",") for p in ("final_test", "zero_shot_test")):
+            extra_cmd_lines.append(f'        "--expected-seal-sha256", "{expected_seal_sha}",\n')
+            if ceremony_oid:
+                extra_cmd_lines.append(f'        "--ceremony-hf-revision", "{ceremony_oid}",\n')
 
         md_lines = [
             f"# {title}\n",
